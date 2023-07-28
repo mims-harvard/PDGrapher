@@ -24,10 +24,6 @@ class Trainer:
         # Logger
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp(kwargs.pop("logging_dir", "experiments/PDGrapher")) # default PDGrapher
-        """ if self.use_logging:
-            makedirs(self.logging_dir, exist_ok=False)
-            self.writer = SummaryWriter(self.logging_dir)
-        else: """
         self.writer = DummyWriter()
         self.log_train = True
         self.log_test = True

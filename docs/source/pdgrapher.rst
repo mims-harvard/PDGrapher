@@ -4,29 +4,12 @@ pdgrapher package
 Submodules
 ----------
 
-pdgrapher.datasets module
--------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: pdgrapher.datasets
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pdgrapher.pdgrapher module
---------------------------
-
-.. automodule:: pdgrapher.pdgrapher
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pdgrapher.train module
-----------------------
-
-.. automodule:: pdgrapher.train
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   pdgrapher.datasets
+   pdgrapher.pdgrapher
+   pdgrapher.train
 
 Module contents
 ---------------

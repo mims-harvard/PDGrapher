@@ -26,8 +26,9 @@ class Dataset:
         self.val_index_backward = self.splits["val_index_backward"]
         self.test_index_forward = self.splits["test_index_forward"]
         self.test_index_backward = self.splits["test_index_backward"]
-        """ for name in _TVT_IDX:
-            setattr(self, name, self.splits[name]) """
+
+        # for name in _TVT_IDX:
+        #    setattr(self, name, self.splits[name])
 
         # Test for index overlap
         self._test_indices()
