@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package.find]
+where = ["src"]
+
+[project]
+name = "PDGrapher"
+version = "0.0.1"
+authors = [
+  {name="davidzqhuang", email="dhuang26@gmail.com"},
+  {name="ggonzales", email="ggonzalezp16@gmail.com"},
+  {name="dmohorcic", email="d.mohorcic@gmail.com"},
+]
+maintainers = []
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "torch",
+    "torch_geometric",
+    "torch-sparse",
+    "torch-scatter",
+    "lightning",
+]
+
+[project.optional-dependencies]
+dev = [
+    "sphinx",
+    "flake8",
+    "myst_parser"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/mims-harvard"

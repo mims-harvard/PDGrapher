@@ -1,0 +1,5 @@
+torch
+torch_geometric
+torch-sparse
+torch-scatter
+lightning
