@@ -1,0 +1,281 @@
+'''
+Exports data for proof of concept model 
+Code taken from rep-learning-approach
+changed to adapt to new data sources (healthy cell lines + COSMIC)
+
+'''
+
+
+import pandas as pd
+import networkx as nx
+import numpy as np
+import os
+import os.path as osp
+import math
+import torch
+from torch_geometric.data import Data
+from torch_geometric.utils import add_remaining_self_loops, to_undirected
+
+############
+#Data loading
+############
+def load_ppi(path_edge_list, log_handle):
+	#Loads PPI
+	ppi = nx.read_edgelist(path_edge_list)
+	log_handle.write('----------------\nNumber of nodes in PPI:\t{}\n'.format(ppi.number_of_nodes()))
+	log_handle.write('Number of edges in PPI:\t{}\n'.format(ppi.number_of_edges()))
+	return ppi
+
+
+def load_gene_metadata(file, log_handle):
+	#Loads gene metadata
+	gene_info = pd.read_csv(file)
+	# dict_symbol_index = dict(zip(gene_info['gene_symbol'], range(len(gene_info))))	#genes are ordered with the same ordering as rows in data matrices
+	dict_entrez_symbol = dict(zip(gene_info['gene_id'], gene_info['gene_symbol']))
+	dict_symbol_entrez = dict(zip(gene_info['gene_symbol'], gene_info['gene_id']))
+	return gene_info, dict_entrez_symbol, dict_symbol_entrez
+
+def load_cosmic(path_cosmic_file, log_handle):
+	data = pd.read_csv(path_cosmic_file)
+	log_handle.write('Loading COSMIC data. Number of cell lines:\t{}\n'.format(len(set(data['Sample name']))))
+	return data
+
+
+def map_cosmic_to_lincs(cosmic_data, cell_line, gene_info, dict_symbol_entrez, log_handle):
+	cosmic_data = cosmic_data[cosmic_data['Sample name']==cell_line]
+	log_handle.write('Mapping cosmic genes to lincs. Mapped: {}/{}\n'.format(len(set(cosmic_data['Gene name']).intersection(gene_info['gene_symbol'])), len(set(cosmic_data['Gene name']))))
+	#Filter genes not mapped to LINCS
+	cosmic_data = cosmic_data[[gene_symbol in dict_symbol_entrez for gene_symbol in cosmic_data['Gene name']]]
+	#Save COSMIC mutations as entrez id (dataframe index)
+	cosmic_mutations = list(set([dict_symbol_entrez[symbol] for symbol in cosmic_data['Gene name']]))
+	return cosmic_mutations
+
+
+
+def load_healthy_data(data_root_dir, healthy, log_handle):
+	healthy_data_path = osp.join(data_root_dir, 'cell_line_{}_pert_{}.npz'.format(healthy[0], healthy[1]))
+	healthy_metadata_path = osp.join(data_root_dir, 'cell_line_{}_pert_{}_metadata.txt'.format(healthy[0], healthy[1]))
+	#Loads metadata
+	healthy_metadata = pd.read_csv(healthy_metadata_path)
+	#Loads data
+	with np.load(healthy_data_path, allow_pickle=True) as arr:
+	        healthy_data =arr['data']
+	        col_ids = arr['col_ids']
+	        row_ids = arr['row_ids']
+	healthy_data = pd.DataFrame(healthy_data, columns= col_ids, index=row_ids)
+	log_handle.write('Loading healthy cell line:\t{} Number of samples:\t{}\n'.format(healthy[0], healthy_data.shape[1]))
+	return healthy_data, healthy_metadata
+
+
+
+
+
+def load_data(cell_line, data_root_dir, log_handle):
+	#Loads data matrix (observational)
+	file = osp.join(data_root_dir, 'cell_line_{}_pert_ctl_vector.npz'.format(cell_line))
+	file_metadata = osp.join(data_root_dir, 'cell_line_{}_pert_ctl_vector_metadata.txt'.format(cell_line))
+	obs_metadata = pd.read_csv(file_metadata)
+	with np.load(file, allow_pickle=True) as arr:
+	        obs_data =arr['data']
+	        col_ids = arr['col_ids']
+	        row_ids = arr['row_ids']
+	obs_data = pd.DataFrame(obs_data, columns= col_ids, index=row_ids)
+	log_handle.write('Number of observational datapoints:\t{}\n'.format(len(obs_metadata)))
+	#Loads data matrix (interventional)
+	file = osp.join(data_root_dir, 'cell_line_{}_pert_trt_xpr.npz'.format(cell_line))
+	file_metadata = osp.join(data_root_dir, 'cell_line_{}_pert_trt_xpr_metadata.txt'.format(cell_line))
+	int_metadata = pd.read_csv(file_metadata)
+	with np.load(file, allow_pickle=True) as arr:
+	        int_data =arr['data']
+	        col_ids = arr['col_ids']
+	        row_ids = arr['row_ids']
+	int_data = pd.DataFrame(int_data, columns= col_ids, index=row_ids)
+	log_handle.write('Number of interventional datapoints:\t{}\n'.format(len(int_metadata)))
+	return obs_metadata, obs_data, int_metadata, int_data
+
+
+
+
+############
+#Processing
+############
+
+def filter_data(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle):
+	#1.Filter out obs and int data to keep only genes that are in the PPI
+	gene_symbols_in_ppi = list(ppi.nodes())
+	dict_symbol_id = dict(zip(gene_info['gene_symbol'], gene_info['gene_id']))
+	gene_ids_in_ppi = [dict_symbol_id[i] for i in gene_symbols_in_ppi]
+	gene_info.index = gene_info['gene_id']; gene_info = gene_info.loc[gene_ids_in_ppi].reset_index(inplace=False, drop=True)
+	obs_data = obs_data.loc[gene_ids_in_ppi]
+	int_data = int_data.loc[gene_ids_in_ppi]
+	healthy_data = healthy_data.loc[gene_ids_in_ppi]
+	cosmic_mutations = pd.DataFrame(cosmic_mutations)[[e in gene_ids_in_ppi for e in cosmic_mutations]][0].tolist()
+	#2. Filter out samples whose interventions are not in the remaining genes (those in the PPI)
+	keep = []
+	for i, gene_symbol in enumerate(int_metadata['cmap_name']):
+		if gene_symbol in gene_symbols_in_ppi:
+			keep.append(int_metadata.at[i, 'sample_id'])
+	int_metadata.index = int_metadata['sample_id']; int_metadata = int_metadata.loc[keep].reset_index(inplace=False, drop=True)
+	int_data = int_data[keep]
+	log_handle.write('Number of interventional datapoints after keeping only those with perturbed genes in PPI:\t{}\n'.format(len(int_metadata)))
+	return healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, gene_info
+
+
+
+
+
+############
+#Asembling the data
+############
+
+def assemble_data_list(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle):
+	log_handle.write('Assembling data...\n')
+
+	#First, we re-index genes in PPI and data
+		#Gene symbol to index to ordered index
+	gene_symbol_to_index = dict(zip(gene_info['gene_symbol'], gene_info['gene_id']))
+	gene_index_to_ordered_index = dict(zip(gene_info['gene_id'], range(len(gene_info))))
+	gene_info['ordered_index'] = [gene_index_to_ordered_index[i] for i in gene_info['gene_id']]
+
+
+		#Reindex genes in PPI, obs_data, int_data, healty_data, and cosmic_mutations
+	ppi = nx.relabel_nodes(ppi, gene_symbol_to_index)
+	ppi = nx.relabel_nodes(ppi, gene_index_to_ordered_index)
+	int_data.index = [gene_index_to_ordered_index[i] for i in int_data.index]
+	int_data = int_data.sort_index(inplace=False)
+	obs_data.index = [gene_index_to_ordered_index[i] for i in obs_data.index]
+	obs_data = obs_data.sort_index(inplace=False)
+	healthy_data.index = [gene_index_to_ordered_index[i] for i in healthy_data.index]
+	healthy_data = healthy_data.sort_index(inplace=False)
+	cosmic_mutations = [gene_index_to_ordered_index[i] for i in cosmic_mutations]
+	cosmic_vector = np.zeros(len(healthy_data))
+	cosmic_vector[cosmic_mutations] = 1
+
+
+	#Assembling samples
+	edge_index = torch.LongTensor(np.array(ppi.edges()).transpose())
+	edge_index = add_remaining_self_loops(edge_index)[0]
+	edge_index = to_undirected(edge_index)
+	number_of_nodes = ppi.number_of_nodes()
+
+	#remove incoming edges to perturbed nodes (mutated nodes)
+	mask = [e not in cosmic_mutations for e in edge_index[1,:]]
+	edge_index_mutilated = edge_index[:, mask]
+	edge_index_mutilated = add_remaining_self_loops(edge_index_mutilated)[0]
+
+	#FORWARD DATA - healthy_data, cosmic_vector, obs_data
+		#each Data object will be a pairing of a random healthy_data column, the cosmic mutations, and a obs_data column
+		#will have as many as obs_data columns
+	forward_data_list = []
+	i = 0
+	order = np.array(range(len(healthy_metadata)))
+	np.random.shuffle(order)
+	for sample_id in obs_data.columns:
+		#sample a random healthy GE vector
+		i = i % len(healthy_metadata)
+		sample_index = order[i]
+		healthy_sample = healthy_data[healthy_data.columns[i]].values
+		healthy = torch.Tensor(healthy_sample)
+		#mutation
+		mutations = torch.Tensor(cosmic_vector)
+		#diseased
+		diseased = torch.LongTensor(obs_data[sample_id].astype(int))
+		data = Data(healthy = healthy, mutations=mutations, diseased=diseased, gene_symbols = gene_info['gene_symbol'].tolist(), edge_index=edge_index_mutilated)
+		data.num_nodes = number_of_nodes
+		forward_data_list.append(data)
+		i +=1
+
+
+	#BACKWARD DATA - obs_data, int_data
+	#dict sample id: perturbed gene ordered index
+	dict_sample_id_perturbed_gene_ordered_index = dict()
+	for sample_id, cmap_name in zip(int_metadata['sample_id'], int_metadata['cmap_name']):
+		dict_sample_id_perturbed_gene_ordered_index[sample_id] = gene_index_to_ordered_index[gene_symbol_to_index[cmap_name]]
+
+
+		#these are helpers to sample from obs_data
+	order = np.array(range(len(obs_metadata)))
+	np.random.shuffle(order)
+	i = 0
+	#shuffle obs data columns
+	backward_data_list = []
+	for sample_id in int_data.columns:
+		binary_indicator_perturbation = np.zeros(len(int_data))
+		binary_indicator_perturbation[dict_sample_id_perturbed_gene_ordered_index[sample_id]] = 1
+		#Get a random pre-intervention sample
+		i = i % len(obs_metadata)
+		sample_index = order[i]
+		obs_sample = obs_data[obs_data.columns[i]].values
+		#concat initial node features and perturbation indicator
+		diseased = torch.Tensor(obs_sample)
+		intervention = torch.Tensor(binary_indicator_perturbation)
+
+		# torch.Tensor(np.stack([obs_sample, binary_indicator_perturbation], 1))
+		#post-intervention
+		treated = torch.LongTensor(int_data[sample_id].astype(int))
+		#remove incoming edges to perturbed node
+		# perturbed_node = dict_sample_id_perturbed_gene_ordered_index[sample_id]
+		# edge_index_mutilated = edge_index[:, edge_index[1,:] != perturbed_node]
+		data = Data(diseased = diseased, intervention=intervention, treated = treated, gene_symbols = gene_info['gene_symbol'].tolist(), edge_index=edge_index_mutilated)
+		data.num_nodes = number_of_nodes
+		backward_data_list.append(data)
+		i +=1
+
+	log_handle.write('Samples forward:\t{}\n'.format(len(forward_data_list)))
+	log_handle.write('Samples backward:\t{}\n'.format(len(backward_data_list)))
+	return forward_data_list, backward_data_list, edge_index_mutilated
+
+
+
+
+def save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle):
+	log_handle.write('Saving data {} ...\n\n\n'.format(cell_line))
+	torch.save(forward_data_list, osp.join(outdir, 'data_forward_{}.pt'.format(cell_line)))
+	torch.save(backward_data_list, osp.join(outdir, 'data_backward_{}.pt'.format(cell_line)))
+	torch.save(edge_index, osp.join(outdir, 'edge_index_{}.pt'.format(cell_line)))
+	return
+
+
+binarization = 'binarize_genewise_comparing_to_control_lognorm'
+outdir = '../processed/{}/{}'.format(binarization, 'cellwise_full_ppi')
+os.makedirs(outdir, exist_ok=True)
+
+
+
+
+def main():  
+	#cell-line wise
+	log_handle = open(osp.join(outdir, 'log_export_graph_for_poconcept_ppi.txt'), 'w')
+	data_root_dir = '../../lincs/processed/{}'.format(binarization)
+	for cell_line, healthy in zip(['A549', 'MCF7', 'PC3'], [('NL20', 'ctl_vehicle'), ('MCF10A', 'ctl_untrt'), ('RWPE1', 'ctl_vector')]):
+		log_handle.write('----------------\n\nCELL LINE:{}\n----------------\n'.format(cell_line))
+		#PPI
+		ppi = load_ppi('../../ppi/processed/ppi_lincs_perturbed_edgelist_{}.txt'.format(cell_line), log_handle)
+		#gene info
+		gene_info, dict_entrez_symbol, dict_symbol_entrez = load_gene_metadata('../../lincs/processed/gene_info.txt', log_handle)
+		#FORWARD DATA
+			#healthy GE data
+		healthy_data, healthy_metadata = load_healthy_data(data_root_dir, healthy, log_handle)
+			#COSMIC
+		cosmic_data = load_cosmic('../../cosmic/processed/CosmicCLP_MutantExport_only_verified_and_curated.csv', log_handle)
+		cosmic_mutations = map_cosmic_to_lincs(cosmic_data, cell_line, gene_info, dict_symbol_entrez, log_handle)
+		#BACKWARD DATA
+			#LINCS
+		obs_metadata, obs_data, int_metadata, int_data = load_data(cell_line, data_root_dir, log_handle)
+		healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, gene_info = filter_data(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
+
+
+		forward_data_list, backward_data_list, edge_index = assemble_data_list(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
+		save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
+
+
+	log_handle.close()
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    main()
