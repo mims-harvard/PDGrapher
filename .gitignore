@@ -162,5 +162,8 @@ cython_debug/
 # VSCode
 .vscode/
 
-# VSCode
-.vscode/
+# Data folder
+# Ignore everything in data folder. An exception are Python processing files
+# and bash files, .keep files are there to enforce the directory structure.
+# Use `git add -f` to add something to data folder.
+data/
