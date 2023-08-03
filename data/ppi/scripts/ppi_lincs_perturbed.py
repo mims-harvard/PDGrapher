@@ -25,7 +25,7 @@ pert_genes = set(pert_metadata['cmap_name'].tolist())
 
 pert_genes = dict()
 for cell_line in list(set(pert_metadata['cell_iname'])):
-	pert_genes[cell_line] = set(pert_metadata[pert_metadata['cell_iname']==cell_line]['cmap_name'].tolist())
+    pert_genes[cell_line] = set(pert_metadata[pert_metadata['cell_iname']==cell_line]['cmap_name'].tolist())
 
 
 
@@ -42,31 +42,31 @@ log_handle.write('Keeping only PPI nodes that are in LINCS:{}\n'.format(ppi.numb
 
 #Filter nodes from PPI to keep only those that have perturbations available
 for cell_line in list(set(pert_metadata['cell_iname'])):
-	ppi_i = ppi.subgraph(pert_genes[cell_line])
-	log_handle.write('Cell line\t{}\n'.format(cell_line))
-	log_handle.write('Keeping only PPI nodes that are in LINCS and perturbed in cell line {}:{} nodes, {} edges\n'.format(cell_line, ppi_i.number_of_nodes(), ppi_i.number_of_edges()))
+    ppi_i = ppi.subgraph(pert_genes[cell_line])
+    log_handle.write('Cell line\t{}\n'.format(cell_line))
+    log_handle.write('Keeping only PPI nodes that are in LINCS and perturbed in cell line {}:{} nodes, {} edges\n'.format(cell_line, ppi_i.number_of_nodes(), ppi_i.number_of_edges()))
 
 
-	#Checks how many connected components there are
-	ccs = [len(c) for c in sorted(nx.connected_components(ppi_i), key=len, reverse=True)]
-	log_handle.write('Number of connected componens:\t{}\n'.format(len(ccs)))
-	# log_handle.write('Size of connected components:\n')
-	# for c in ccs:
-	# 	log_handle.write('{}\n'.format(str(c)))
+    #Checks how many connected components there are
+    ccs = [len(c) for c in sorted(nx.connected_components(ppi_i), key=len, reverse=True)]
+    log_handle.write('Number of connected componens:\t{}\n'.format(len(ccs)))
+    # log_handle.write('Size of connected components:\n')
+    # for c in ccs:
+    # 	log_handle.write('{}\n'.format(str(c)))
 
 
-	# Selects biggest connected component
-	Gcc = sorted(nx.connected_components(ppi_i), key=len, reverse=True)
-	ppi_i = ppi_i.subgraph(Gcc[0])
-	log_handle.write('After keeping only biggest CC:\n')
-	log_handle.write('stats: {} nodes, {} edges, {} density, {} diameter\n\n\n'.format(ppi_i.number_of_nodes(), ppi_i.number_of_edges(), nx.density(ppi_i), nx.diameter(ppi_i)))
+    # Selects biggest connected component
+    Gcc = sorted(nx.connected_components(ppi_i), key=len, reverse=True)
+    ppi_i = ppi_i.subgraph(Gcc[0])
+    log_handle.write('After keeping only biggest CC:\n')
+    log_handle.write('stats: {} nodes, {} edges, {} density, {} diameter\n\n\n'.format(ppi_i.number_of_nodes(), ppi_i.number_of_edges(), nx.density(ppi_i), nx.diameter(ppi_i)))
 
-	#Saves ppi
-	outdir = '../processed'
-	os.makedirs(outdir, exist_ok=True)
-	ppi_f = osp.join(outdir, 'ppi_lincs_perturbed_edgelist_{}.txt'.format(cell_line))
+    #Saves ppi
+    outdir = '../processed'
+    os.makedirs(outdir, exist_ok=True)
+    ppi_f = osp.join(outdir, 'ppi_lincs_perturbed_edgelist_{}.txt'.format(cell_line))
 
-	nx.write_edgelist(ppi_i, ppi_f, data=False) 
+    nx.write_edgelist(ppi_i, ppi_f, data=False) 
 
 
 

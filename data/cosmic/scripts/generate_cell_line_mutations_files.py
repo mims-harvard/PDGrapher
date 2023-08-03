@@ -31,12 +31,12 @@ data = data[mask]
 log_handle = open('log_stats.txt','w')
 columns = ['Mutation Description', 'Mutation somatic status', 'Mutation verification status']
 for cell_line in cell_lines:
-	data_i = data[data['Sample name']==cell_line]
-	log_handle.write('\nCELL LINE:\t{}\n'.format(cell_line))
-	for column in columns:
-		log_handle.write(column+'\n')
-		log_handle.write(str(Counter(data_i[column])) +'\n\n')
-	log_handle.write('Total genes mutated:\t{}\n'.format(len(data_i['Gene name'])))
+    data_i = data[data['Sample name']==cell_line]
+    log_handle.write('\nCELL LINE:\t{}\n'.format(cell_line))
+    for column in columns:
+        log_handle.write(column+'\n')
+        log_handle.write(str(Counter(data_i[column])) +'\n\n')
+    log_handle.write('Total genes mutated:\t{}\n'.format(len(data_i['Gene name'])))
 
 log_handle.close()
 
@@ -44,10 +44,10 @@ log_handle.close()
 
 
 #As agreed with Marinka, take an overlap of the 'verified' mutations and expert curated genes, for each cell line
-	#Filter to keep only verified genes
+    #Filter to keep only verified genes
 data = data[data['Mutation verification status'] == 'Verified']
 
-	#Filter to keep only curated genes
+    #Filter to keep only curated genes
 curated_genes = pd.read_csv('../2022-10-COSMIC/data/expert_curated_genes_cosmic.csv')['Genes'].tolist()
 mask = [gene in curated_genes for gene in data['Gene name']]
 data = data[mask]

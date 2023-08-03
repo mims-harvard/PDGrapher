@@ -3,3 +3,9 @@ build
 sphinx
 myst_parser
 flake8
+# for data processing
+matplotlib
+h5py
+csrgraph
+seaborn
+beautifulsoup4
