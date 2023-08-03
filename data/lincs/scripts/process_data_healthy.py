@@ -359,7 +359,10 @@ def main():
     # binarize_genewise_comparing_to_control_augmented(inst_info_ctl, matrix_ctl, gene_info, log_handle, outdir, use_log)
     # log_handle.close()
 
-    DATA_ROOT = "../2022-02-LINCS_Level3/data/"
+    #tmp_path = "2022-02-LINCS_Level3/data"
+    tmp_path = "raw"
+
+    DATA_ROOT = f"../{tmp_path}/"
     log_handle = open(osp.join(outdir, 'process_data_healthy_lognorm.txt'), 'w')
     inst_info_ctl, gene_info, matrix_ctl = loads_data(DATA_ROOT, log_handle)
     inst_info_ctl, matrix_ctl = filter_data_metadata(inst_info_ctl, matrix_ctl, log_handle)

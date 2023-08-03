@@ -17,10 +17,12 @@ os.makedirs(outdir, exist_ok=True)
 
 cell_lines = ['A375', 'A549', 'PC-3', 'MCF7', 'HT-29']
 
+#tmp_path = "2022-10-COSMIC/data"
+tmp_path = "raw"
 
 
 #Loads data 
-data = pd.read_csv('../2022-10-COSMIC/data/CosmicCLP_MutantExport.tsv', sep='\t', encoding="ISO-8859-1")
+data = pd.read_csv(f'../{tmp_path}/CosmicCLP_MutantExport.tsv', sep='\t', encoding="ISO-8859-1")
 #Filter to include only the 5 cell lines of interest
 mask = [e in cell_lines for e in data['Sample name']]
 data = data[mask]
@@ -48,7 +50,7 @@ log_handle.close()
 data = data[data['Mutation verification status'] == 'Verified']
 
     #Filter to keep only curated genes
-curated_genes = pd.read_csv('../2022-10-COSMIC/data/expert_curated_genes_cosmic.csv')['Genes'].tolist()
+curated_genes = pd.read_csv(f'../{tmp_path}/expert_curated_genes_cosmic.csv')['Genes'].tolist()
 mask = [gene in curated_genes for gene in data['Gene name']]
 data = data[mask]
 data['Sample name'] = [e.replace('-','') for e in data['Sample name']]

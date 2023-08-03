@@ -13,11 +13,13 @@ import os.path as osp
 path_edge_list = '../2020-12-PPI/processed/ppi_edgelist.txt'
 log_handle = open('log_ppi_lincs_perturbed.txt', 'w')
 
+#tmp_path = "2022-02-LINCS_Level3/data"
+tmp_path = "raw"
 
 #Loads dataset PPI (BIOGRID)
 ppi = nx.read_edgelist(path_edge_list)
 #Loads gene info LINCS
-gene_info = pd.read_csv('../../lincs/2022-02-LINCS_Level3/data/geneinfo_beta.txt', sep="\t", low_memory=False)
+gene_info = pd.read_csv(f'../../lincs/{tmp_path}/geneinfo_beta.txt', sep="\t", low_memory=False)
 #Loads perturbations metadata
 pert_metadata = pd.read_csv(osp.join('../../lincs/processed/binarize_genewise_comparing_to_control', 'all_metadata.txt'), low_memory=False)
 pert_metadata = pert_metadata[pert_metadata['pert_type'] != 'ctl_vector']
