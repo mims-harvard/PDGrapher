@@ -6,6 +6,10 @@ from typing import Tuple, Callable
 import torch
 import torch.nn as nn
 
+def _test_condition(condition: bool, text: str):
+    if not condition:
+        raise ValueError(text)
+
 # SAMPLE WEIGHTS
 """ def cal_weights_model_1_forward(dataset):
     #predicting 'diseased'
@@ -76,6 +80,7 @@ def get_threshold_treated(dataset):
 
 
 def _get_thresholds(dataset, kind: str):
+    _test_condition(kind in {"healthy", "diseased", "treated"}, "`kind` should be one of (diseased, treated, intervention)")
     all_values = [getattr(data, kind).cpu() for data in dataset]
     percentiles = torch.Tensor(np.percentile(torch.stack(all_values).flatten(), [e for e in np.arange(0, 100, 0.2)] + [100]))
     return percentiles
@@ -176,8 +181,3 @@ class DummyWriter:
 
     def add_scalar(self, *args, **kwargs):
         pass
-
-
-def _test_condition(condition: bool, text: str):
-    if not condition:
-        raise ValueError(text)
