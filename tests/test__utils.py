@@ -16,7 +16,7 @@ from pdgrapher._utils import (
 )
 
 
-class Test_test_condition(unittest.TestCase):
+class TestTestCondition(unittest.TestCase):
 
     def test_assertion_false(self):
         with self.assertRaises(ValueError):
@@ -55,7 +55,7 @@ class TestCalculateLossSampleWeights(unittest.TestCase):
 
         self.dataset = [OuterDataset() for _ in range(10)]
     
-    def _true_ab(self, kind: str):
+    def true_ab(self, kind: str):
         positive = sum(getattr(data, kind)._nonzero for data in self.dataset)
         full = sum(getattr(data, kind)._size for data in self.dataset)
         negative = full-positive
@@ -71,19 +71,19 @@ class TestCalculateLossSampleWeights(unittest.TestCase):
 
     def test_diseased(self):
         a, b = calculate_loss_sample_weights(self.dataset, "diseased")
-        true_a, true_b = self._true_ab("diseased")
+        true_a, true_b = self.true_ab("diseased")
         self.assertAlmostEqual(a, true_a)
         self.assertAlmostEqual(b, true_b)
     
     def test_treated(self):
         a, b = calculate_loss_sample_weights(self.dataset, "treated")
-        true_a, true_b = self._true_ab("treated")
+        true_a, true_b = self.true_ab("treated")
         self.assertAlmostEqual(a, true_a)
         self.assertAlmostEqual(b, true_b)
 
     def test_intervention(self):
         a, b = calculate_loss_sample_weights(self.dataset, "intervention")
-        true_a, true_b = self._true_ab("intervention")
+        true_a, true_b = self.true_ab("intervention")
         self.assertAlmostEqual(a, true_a)
         self.assertAlmostEqual(b, true_b)
 
@@ -133,21 +133,74 @@ class TestSaveLoadModel(unittest.TestCase):
 
 class TestTicToc(unittest.TestCase):
 
-    def test_output_basic(self):
-        @tictoc
-        def function_basic():
-            pass
-        
-        # redirect stdout to object
+    def get_captured_stdout(self, fn):
         captured_stdout = io.StringIO()
         sys.stdout = captured_stdout
-        function_basic()
-        # restore stdout
+        fn()
         sys.stdout = sys.__stdout__
-        printed_stdout = captured_stdout.getvalue()
+        return captured_stdout.getvalue()
 
-        self.assertTrue(printed_stdout.endswith("secs"))
+    def test_output_basic_1(self):
+        @tictoc
+        def fn():
+            return 0
 
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+    
+    def test_output_basic_2(self):
+        @tictoc()
+        def fn():
+            return 0
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+
+    def test_output_custom(self):
+        @tictoc("Custom {}secs")
+        def fn():
+            return 0
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.startswith("Custom "))
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+    
+    def test_wrong_format(self):
+        with self.assertRaises(ValueError):
+            @tictoc("Not formattable")
+            def fn():
+                return 0
+
+    def test_output_wrapped(self):
+        def fn():
+            return 0
+        fn = tictoc(fn)
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+    
+    def test_output_wrapped_custom(self):
+        def fn():
+            return 0
+        fn = tictoc(fn, "Custom {}secs")
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.startswith("Custom "))
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+    
+    def test_wrapped_wrong_format(self):
+        with self.assertRaises(ValueError):
+            def fn():
+                return 0
+            fn = tictoc(fn, "Not formattable")
+
+
+class TestEarlyStopping(unittest.TestCase):
+    pass
+
+
+class TestDummyWriter(unittest.TestCase):
+    pass
 
 
 if __name__ == "__main__":

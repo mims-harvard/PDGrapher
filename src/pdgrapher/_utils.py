@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import string
 from time import perf_counter
 from typing import Tuple, Callable
 
@@ -163,7 +164,8 @@ class EarlyStopping:
         return False
 
 
-def tictoc(text_to_format: str = "{}secs"):
+def tictoc(*args):
+    # https://stackoverflow.com/questions/3931627/how-to-build-a-decorator-with-optional-parameters
     def wrap(function: Callable):
         def wrapped_f(*args, **kwargs):
             tic = perf_counter()
@@ -172,7 +174,16 @@ def tictoc(text_to_format: str = "{}secs"):
             print(text_to_format.format(toc-tic))
             return result
         return wrapped_f
-    return wrap
+    if len(args) >= 1 and callable(args[0]):
+        text_to_format: str = args[1] if len(args) >= 2 else "{}secs"
+        to_return = wrap(args[0])
+    else:
+        text_to_format = args[0] if args else "{}secs"
+        to_return = wrap
+    matches = [tup[1] for tup in string.Formatter().parse(text_to_format) if tup[1] is not None]
+    if len(matches) != 1:
+        raise ValueError(r"tictoc decorator requires string with one {}!")
+    return to_return
 
 
 class DummyWriter:
