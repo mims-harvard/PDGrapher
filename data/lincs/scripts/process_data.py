@@ -207,7 +207,7 @@ def stats_control(inst_info_ctl, log_handle):
     df_ctl = pd.DataFrame([(i, len(df_ctl.loc[i][0])) for i in df_ctl.index], columns =['cmap_name-cell_line', 'n_doses'])
     log_handle.write('Stats on dosages and timepoints\n')
     log_handle.write('\n------\nHOW MANY DOSES ARE THERE FOR CMAP_NAME-CELL LINE PAIRS?\n------\n')
-    for index,value in pd.DataFrame(df_ctl['n_doses'])['n_doses'].describe().iterrows():
+    for index,value in pd.DataFrame(df_ctl['n_doses'])['n_doses'].describe().items():
         log_handle.write('{}:\t{}\n'.format(index, value))
 
     log_handle.write('\n')
@@ -219,7 +219,7 @@ def stats_control(inst_info_ctl, log_handle):
     df_ctl = pd.DataFrame([(i, len(df_ctl.loc[i][0])) for i in df_ctl.index], columns =['cmap_name-cell_line', 'n_times'])
 
     log_handle.write('\n------\nHOW MANY TIMEPOINTS ARE THERE FOR CMAP_NAME-CELL LINE PAIRS?\n------\n')
-    for index,value in pd.DataFrame(df_ctl['n_times'])['n_times'].describe().iterrows():
+    for index,value in pd.DataFrame(df_ctl['n_times'])['n_times'].describe().items():
         log_handle.write('{}:\t{}\n'.format(index, value))
 
     log_handle.write('\n')
