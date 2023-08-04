@@ -19,7 +19,7 @@ ppi = nx.read_edgelist(path_edge_list)
 #Loads gene info LINCS
 gene_info = pd.read_csv('../../lincs/2022-02-LINCS_Level3/data/geneinfo_beta.txt', sep="\t", low_memory=False)
 #Loads perturbations metadata
-pert_metadata = pd.read_csv(osp.join('../../lincs/processed/', 'all_metadata.txt'), low_memory=False)
+pert_metadata = pd.read_csv(osp.join('../../lincs/processed/real_lognorm', 'all_metadata.txt'), low_memory=False)
 pert_metadata = pert_metadata[pert_metadata['pert_type'] != 'ctl_vector']
 pert_genes = set(pert_metadata['cmap_name'].tolist())
 
