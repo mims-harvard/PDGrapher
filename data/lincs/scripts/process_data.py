@@ -18,7 +18,7 @@ outdir = '../processed'
 os.makedirs(outdir, exist_ok=True)
 
     #LOG
-
+    
 
 ################
 # Data loading
@@ -32,7 +32,7 @@ def stats_data(inst_info_xpr, matrix_xpr, matrix_ctl, gene_info):
     values_control = {}
     for i in range(len(inst_info_xpr)):
         gene_symbol = inst_info_xpr.at[i, 'cmap_name']
-        if gene_symbol in dict_symbol_id:  #if the cmap_name of gene is in the gene_info
+        if gene_symbol in dict_symbol_id:					#if the cmap_name of gene is in the gene_info
             sample_id = inst_info_xpr.at[i, 'sample_id']
             gene_id = dict_symbol_id[gene_symbol]
             if gene_id in values_pert:
@@ -42,7 +42,7 @@ def stats_data(inst_info_xpr, matrix_xpr, matrix_ctl, gene_info):
 
 
     for gene_symbol in list(set(inst_info_xpr['cmap_name'])):
-        if gene_symbol in dict_symbol_id:  #if the cmap_name of gene is in the gene_info
+        if gene_symbol in dict_symbol_id:				#if the cmap_name of gene is in the gene_info
             gene_id = dict_symbol_id[gene_symbol]
             values_control[gene_id] = [matrix_ctl.loc[gene_id]]
 
@@ -834,7 +834,7 @@ def normalize_and_save(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, gen
     else:
         outdir = osp.join(outdir, 'real')
     os.makedirs(outdir, exist_ok= True)
-
+    
 
     #All data
     metadata = pd.concat([inst_info_xpr, inst_info_ctl], axis=0).reset_index(inplace=False, drop=True)
@@ -928,10 +928,7 @@ def main():
     # binarize_genewise_comparing_to_control(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, gene_info, keep_cell_lines, log_handle, outdir, use_log)
     # log_handle.close()
 
-    #tmp_path = "2022-02-LINCS_Level3/data"
-    tmp_path = "raw"
-
-    DATA_ROOT = f"../{tmp_path}/"
+    DATA_ROOT = "../2022-02-LINCS_Level3/data/"
     log_handle = open(osp.join(outdir, 'process_data_lognorm.txt'), 'w')
     inst_info_xpr, inst_info_ctl, gene_info, matrix_xpr, matrix_ctl = loads_data(DATA_ROOT, log_handle)
     inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl = filter_data_metadata(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, log_handle)
