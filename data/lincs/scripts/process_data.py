@@ -839,7 +839,7 @@ def normalize_and_save(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, gen
     #All data
     metadata = pd.concat([inst_info_xpr, inst_info_ctl], axis=0).reset_index(inplace=False, drop=True)
     metadata.to_csv(osp.join(outdir, 'all_metadata.txt'))
-    matrix = pd.concat([matrix_xpr, matrix_ctl], 1)
+    matrix = pd.concat([matrix_xpr, matrix_ctl], axis=1)
     del(matrix_xpr) 
 
     #hist of values before lognorm
