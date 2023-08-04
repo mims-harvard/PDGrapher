@@ -236,7 +236,7 @@ def save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_
     return
 
 
-binarization = 'binarize_genewise_comparing_to_control_lognorm'
+binarization = 'real_lognorm'
 outdir = '../processed/{}/{}'.format(binarization, 'cellwise_full_ppi')
 os.makedirs(outdir, exist_ok=True)
 
