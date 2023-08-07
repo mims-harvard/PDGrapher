@@ -19,7 +19,7 @@ class Dataset:
         self.dataset_forward = torch.load(forward_path)
         self.dataset_backward = torch.load(backward_path)
 
-        self.splits = torch.load(splits_path) # TODO this is single_fold, for k-fold self.splits is a list?
+        self.splits = torch.load(splits_path) # TODO this is single_fold, for k-fold self.splits is a list
         self.train_index_forward = self.splits["train_index_forward"]
         self.train_index_backward = self.splits["train_index_backward"]
         self.val_index_forward = self.splits["val_index_forward"]

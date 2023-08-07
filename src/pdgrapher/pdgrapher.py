@@ -10,56 +10,47 @@ from pdgrapher._utils import _test_condition
 __all__ = ["PDGrapher"]
 
 
-def _get_all_kwargs(args: Dict[str, Any], prefix: str) -> Dict[str, int]:
-    # extract arguments that start with '{prefix}'
-    out_dict = dict()
-    for k in args:
-        if k.startswith(prefix):
-            v = args.pop(k)
-            new_k = k[len(prefix):]
-            out_dict[new_k] = int(v)
-    return out_dict
-
-
 class PDGrapher:
     """
     PDGrapher is a model that... It consists of two submodels: Response
     Prediction Model (RP) and Perturbation Discovery Model (PD).
     """
 
-    def __init__(self, edge_index, **kwargs: Any) -> None:
+    def __init__(self, edge_index, response_args: Dict[str, Any] = {},
+                 perturbation_args: Dict[str, Any] = {}, **kwargs: Any) -> None:
         """
         Initialization for PDGrapher. Handles ...
 
         Args:
             edge_index (_type_): _description_
-        Next arguments need to be prefixed with either 'response_' or
-        'perturbation_' and are applied to the correct model. Same argument can
-        be used twice, once with each prefix.
-            positional_features_dims (int): _description_
-            embedding_layer_dim (int): _description_
-            dim_gnn (int): _description_
-            out_channels (int): _description_
-            num_vars (int): _description_
-            n_layers_gnn (int): _description_
-            n_layers_nn (int): _description_
+            response_args (dict[str, Any]): Arguments for Response Prediction
+                Model. See bellow for all possible key:value pairs. Defaults to
+                {}.
+            perturbation_args (dict[str, Any]): Arguments for Perturbation
+                Discovery Model. See bellow for all possible key:value pairs.
+                Defaults to {}.
+        Next arguments apply to both to response_args and perturbation_args.
+            positional_features_dims (int): _description_. Defaults to 16.
+            embedding_layer_dim (int): _description_. Defaults to 16.
+            dim_gnn (int): _description_. Defaults to 16.
+            out_channels (int): _description_. Defaults to 1.
+            num_vars (int): _description_. Defaults to 1.
+            n_layers_gnn (int): _description_. Defaults to 1.
+            n_layers_nn (int): _description_. Defaults to 2.
             train (bool): Whether to train this model. Defaults to True.
         """
 
         # Pop kwargs related to response_prediction and perturbation_discovery
         # modules
-        rp_kwargs = _get_all_kwargs(kwargs, "response_")
-        rp_args = GCNArgs.from_dict(rp_kwargs)
-        pd_kwargs = _get_all_kwargs(kwargs, "perturbation_")
-        pd_args = GCNArgs.from_dict(pd_kwargs)
+        self._train_response_prediction = response_args.pop("train", True)
+        self._train_perturbation_discovery = perturbation_args.pop("train", True)
+
+        rp_args = GCNArgs.from_dict(response_args)
+        pd_args = GCNArgs.from_dict(perturbation_args)
 
         # Models
         self.response_prediction: nn.Module = ResponsePredictionModel(rp_args, edge_index)
         self.perturbation_discovery: nn.Module = PerturbationDiscoveryModel(pd_args, edge_index)
-
-        # TODO support training only one of the models
-        self._train_response_prediction = rp_kwargs.pop("train", True)
-        self._train_perturbation_discovery = pd_kwargs.pop("train", True)
 
         # Optimizers & Schedulers
         # we use __* to set these "private"

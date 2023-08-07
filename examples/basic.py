@@ -3,8 +3,12 @@ import torch
 from pdgrapher import Dataset, PDGrapher, Trainer
 
 def main():
-    dataset = Dataset() # TODO add paths
-    edge_index = torch.load("edge_index_path")
+    dataset = Dataset(
+        forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
+        backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+        splits_path="data/splits/genetic/A549/random/1fold/splits.pt"
+    )
+    edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
     model = PDGrapher(edge_index)
     trainer = Trainer()
 

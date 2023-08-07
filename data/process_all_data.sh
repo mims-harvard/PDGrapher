@@ -13,7 +13,8 @@ cd ../..
 
 # Process PPI data
 cd ppi/scripts
-pyton3 ppi_lincs_perturbed.py
+python3 ppi_lincs_perturbed.py
+python3 export_ppi_all_genes.py
 cd ../..
 
 # Data preparation
