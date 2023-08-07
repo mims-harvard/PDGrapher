@@ -31,9 +31,9 @@ log_handle.write('Overlap of genes from LINCS to PPI:{}/{}\n'.format(len(set(ppi
 ppi = ppi.subgraph(gene_info['gene_symbol'].tolist())
 log_handle.write('Keeping only PPI nodes that are in LINCS:{}\n'.format(ppi.number_of_nodes()))
 
-ccs = [len(c) for c in sorted(nx.connected_components(ppi), key=len, reverse=True)]
-log_handle.write('Number of connected componens:\t{}\n'.format(len(ccs)))
 Gcc = sorted(nx.connected_components(ppi), key=len, reverse=True)
+ccs = [len(c) for c in Gcc]
+log_handle.write('Number of connected componens:\t{}\n'.format(len(ccs)))
 ppi = ppi.subgraph(Gcc[0])
 log_handle.write('After keeping only biggest CC:\n')
 log_handle.write('stats: {} nodes, {} edges, {} density, {} diameter\n\n\n'.format(ppi.number_of_nodes(), ppi.number_of_edges(), nx.density(ppi), nx.diameter(ppi)))
@@ -43,28 +43,6 @@ outdir = '../processed'
 os.makedirs(outdir, exist_ok=True)
 ppi_f = osp.join(outdir, 'ppi_all_genes_edgelist.txt')
 
-nx.write_edgelist(ppi, ppi_f, data=False) 
-
-
-
+nx.write_edgelist(ppi, ppi_f, data=False)
 
 log_handle.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
