@@ -15,7 +15,8 @@ _TVT_IDX = ["train_index_forward", "train_index_backward",
 
 class Dataset:
 
-    def __init__(self, forward_path: str, backward_path: str, splits_path: str):
+    def __init__(self, forward_path: str, backward_path: str, splits_path: str,
+                 test_indices: bool = True):
         self.dataset_forward = torch.load(forward_path)
         self.dataset_backward = torch.load(backward_path)
 
@@ -31,7 +32,8 @@ class Dataset:
         #    setattr(self, name, self.splits[name])
 
         # Test for index overlap
-        self._test_indices()
+        if test_indices:
+            self._test_indices()
 
         self.train_dataset_forward = self.dataset_forward[self.train_index_forward]
         self.val_dataset_forward = self.dataset_forward[self.val_index_forward]
@@ -48,12 +50,12 @@ class Dataset:
         set_trib = set(self.train_index_backward)
         set_vib = set(self.val_index_backward)
         set_teib = set(self.test_index_backward)
-        _test_condition(any(x in set_vif for x in set_trif), "Overlap between train and validation indices should be zero (forward)")
-        _test_condition(any(x in set_teif for x in set_trif), "Overlap between train and test indices should be zero (forward)")
-        _test_condition(any(x in set_teif for x in set_vif), "Overlap between validation and test indices should be zero (forward)")
-        _test_condition(any(x in set_vib for x in set_trib), "Overlap between train and validation indices should be zero (backward)")
-        _test_condition(any(x in set_teib for x in set_trib), "Overlap between train and test indices should be zero (backward)")
-        _test_condition(any(x in set_teib for x in set_vib), "Overlap between validation and test indices should be zero (backward)")
+        _test_condition(not any(x in set_vif for x in set_trif), "Overlap between train and validation indices should be zero (forward)")
+        _test_condition(not any(x in set_teif for x in set_trif), "Overlap between train and test indices should be zero (forward)")
+        _test_condition(not any(x in set_teif for x in set_vif), "Overlap between validation and test indices should be zero (forward)")
+        _test_condition(not any(x in set_vib for x in set_trib), "Overlap between train and validation indices should be zero (backward)")
+        _test_condition(not any(x in set_teib for x in set_trib), "Overlap between train and test indices should be zero (backward)")
+        _test_condition(not any(x in set_teib for x in set_vib), "Overlap between validation and test indices should be zero (backward)")
 
 
     def get_dataloaders(self, batch_size: int = 64, **kwargs) -> List[DataLoader]:
