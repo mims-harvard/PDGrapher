@@ -129,6 +129,8 @@ class PDGrapher:
     def _check_optimizers(self, correct_model: nn.Module, wrong_model: nn.Module,
                           optimizer: Union[optim.Optimizer, List[optim.Optimizer]]) -> bool:
         # we check for the intersection of the parameters between model and optimizer
+        if not optimizer:
+            return False
         correct_model_parameters = set(correct_model.parameters())
         wrong_model_parameters = set(wrong_model.parameters())
         if isinstance(optimizer, list):
