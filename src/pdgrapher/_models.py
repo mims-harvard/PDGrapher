@@ -12,7 +12,7 @@ from pdgrapher._torch_geometric import GCNConv
 __all__ = ["GCNArgs", "ResponsePredictionModel", "PerturbationDiscoveryModel"]
 
 
-@dataclass(frozen=True)
+@dataclass
 class GCNArgs():
     positional_features_dims: int = 16
     embedding_layer_dim: int = 16
