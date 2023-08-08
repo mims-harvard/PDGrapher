@@ -35,12 +35,12 @@ class Dataset:
         if test_indices:
             self._test_indices()
 
-        self.train_dataset_forward = self.dataset_forward[self.train_index_forward]
-        self.val_dataset_forward = self.dataset_forward[self.val_index_forward]
-        self.test_dataset_forward = self.dataset_forward[self.test_index_forward]
-        self.train_dataset_backward = self.dataset_backward[self.train_index_backward]
-        self.val_dataset_backward = self.dataset_backward[self.val_index_backward]
-        self.test_dataset_backward = self.dataset_backward[self.test_index_backward]
+        self.train_dataset_forward = [self.dataset_forward[i] for i in self.train_index_forward]
+        self.val_dataset_forward = [self.dataset_forward[i] for i in self.val_index_forward]
+        self.test_dataset_forward = [self.dataset_forward[i] for i in self.test_index_forward]
+        self.train_dataset_backward = [self.dataset_backward[i] for i in self.train_index_backward]
+        self.val_dataset_backward = [self.dataset_backward[i] for i in self.val_index_backward]
+        self.test_dataset_backward = [self.dataset_backward[i] for i in self.test_index_backward]
 
 
     def _test_indices(self):
