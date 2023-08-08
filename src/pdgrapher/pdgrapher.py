@@ -108,9 +108,11 @@ class PDGrapher:
             schedulers (list[None, LRScheduler, list[LRScheduler]], optional): _description_. Defaults to [None, None].
         """
         # Check if optimizers len is ok
-        _test_condition(len(optimizers) != 2, f"Parameter `optimizers` needs to be a list of length 2, but length {len(optimizers)} was detected!")
+        _test_condition(isinstance(optimizers, list), f"Parameter `optimizers` needs to be a list!")
+        _test_condition(len(optimizers) == 2, f"Parameter `optimizers` needs to be a list of length 2, but length {len(optimizers)} was detected!")
         # Check if schedulers len is ok
-        _test_condition(len(schedulers) != 2, f"Parameter `schedulers` needs to be a list of length 2, but length {len(schedulers)} was provided!")
+        _test_condition(isinstance(schedulers, list), f"Parameter `schedulers` needs to be a list!")
+        _test_condition(len(schedulers) == 2, f"Parameter `schedulers` needs to be a list of length 2, but length {len(schedulers)} was provided!")
         # Check for each optimizer if it is connected to the correct model
         _test_condition(self._check_optimizers(self.response_prediction, self.perturbation_discovery, optimizers[0]), "One of the provided optimizers for the Response Prediction Model has no association with it!")
         _test_condition(self._check_optimizers(self.perturbation_discovery, self.response_prediction, optimizers[1]), "One of the provided optimizers for the Perturbation Discovery Model has no association with it!")
@@ -136,14 +138,14 @@ class PDGrapher:
                     return False
                 if op_parameters.intersection(wrong_model_parameters): # common parameters with wrong model
                     return False
-            return True
+            return bool(len(optimizer)) # we have at least one optimizer
         op_parameters = set(p for group in optimizer.param_groups for p in group["params"])
         return bool(op_parameters.intersection(correct_model_parameters)) and not bool(op_parameters.intersection(wrong_model_parameters))
 
 
     def _check_schedulers(
             self, optimizer: Union[optim.Optimizer, List[optim.Optimizer]],
-            scheduler: Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]]) -> bool:
+            scheduler: Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]] = None) -> bool:
         if scheduler is None: # using no scheduler is permited
             return True
 
