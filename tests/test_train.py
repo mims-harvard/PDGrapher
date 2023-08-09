@@ -11,14 +11,14 @@ class TestTrainer(unittest.TestCase):
     def test_trainer_args(self):
         trainer = Trainer(
             log_train=False, use_backward_data=True, supervision_multiplier=1.3,
-            accelerator="gpu" # Fabric args
+            accelerator="cpu" # Fabric args
         )
 
         self.assertFalse(trainer.log_train)
         self.assertTrue(trainer.use_backward_data)
         self.assertEqual(trainer.supervision_multiplier, 1.3)
         
-        self.assertEqual(trainer.fabric.accelerator, "gpu")
+        self.assertEqual(trainer.fabric.accelerator, "cpu")
 
 
 if __name__ == "__main__":
