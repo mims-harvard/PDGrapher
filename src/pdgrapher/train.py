@@ -21,7 +21,7 @@ class Trainer:
     def __init__(self, **kwargs):
         # Logger
         self.use_logging = kwargs.pop("log", False)
-        self.logging_dir = osp(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
+        self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
         self.writer = DummyWriter()
         self.log_train = kwargs.pop("log_train", True)
         self.log_test = kwargs.pop("log_train", True)
