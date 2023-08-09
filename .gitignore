@@ -167,3 +167,6 @@ cython_debug/
 # and bash files, .keep files are there to enforce the directory structure.
 # Use `git add -f` to add something to data folder.
 data/
+
+tests/PDGrapher_test/*
+!tests/PDGrapher_test/.keep
