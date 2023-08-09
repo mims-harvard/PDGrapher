@@ -55,6 +55,8 @@ class Trainer:
         pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
         thresholds = get_thresholds(dataset)
         thresholds = {k: self.fabric.to_device(v) for k, v in thresholds.items()} # do we really need them?
+        model.response_prediction.edge_index = self.fabric.to_device(model.response_prediction.edge_index)
+        model.perturbation_discovery.edge_index = self.fabric.to_device(model.perturbation_discovery.edge_index)
 
         # Optimizers & Schedulers
         model_1, model_2 = self._configure_model_with_optimizers_and_schedulers(model)
