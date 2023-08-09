@@ -18,7 +18,7 @@ class TestTrainer(unittest.TestCase):
         self.assertTrue(trainer.use_backward_data)
         self.assertEqual(trainer.supervision_multiplier, 1.3)
         
-        self.assertEqual(trainer.fabric.accelerator, "cpu")
+        self.assertEqual(trainer.fabric.device.type, "cpu")
 
 
 if __name__ == "__main__":
