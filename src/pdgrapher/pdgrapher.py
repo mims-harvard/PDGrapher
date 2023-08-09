@@ -18,7 +18,7 @@ class PDGrapher:
     """
 
     def __init__(self, edge_index: torch.Tensor, response_args: Dict[str, Any] = {},
-                 perturbation_args: Dict[str, Any] = {}, **kwargs: Any) -> None:
+                 perturbation_args: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
         """
         Initialization for PDGrapher. Handles ...
 

@@ -14,6 +14,21 @@ class TestPDGrapher(unittest.TestCase):
     def test_pdgrapher(self):
         model = PDGrapher(self.edge_index)
 
+    def test_pdgrapher_args(self):
+        model = PDGrapher(
+            self.edge_index, response_args={"n_layers_gnn": 3, "n_layers_nn": 9, "train": False},
+            perturbation_args={"n_layers_gnn": 7, "n_layers_nn": 4, "train": True})
+
+        # test response_args
+        self.assertEqual(len(model.response_prediction.convs), 3)
+        self.assertEqual(len(model.response_prediction.mlp), 1+9+1)
+        self.assertFalse(model._train_response_prediction)
+
+        # test perturbation_args
+        self.assertEqual(len(model.perturbation_discovery.convs), 7)
+        self.assertEqual(len(model.perturbation_discovery.mlp), 1+4+1)
+        self.assertTrue(model._train_perturbation_discovery)
+
     def test_missing_optimizers(self):
         model = PDGrapher(self.edge_index)
 
@@ -115,7 +130,7 @@ class TestPDGrapher(unittest.TestCase):
             model.set_optimizers_and_schedulers([o1, o2], [None, s2])
         with self.assertRaises(ValueError):
             model.set_optimizers_and_schedulers([o1, o2], [s1, s2])
-    
+
     def test_single_optimizer_multiple_schedulers(self):
         model = PDGrapher(self.edge_index)
 
