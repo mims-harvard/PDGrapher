@@ -1,8 +1,9 @@
 from typing import Any, List, Dict, Tuple, Union, Optional
 
+import torch
+import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
-import torch.nn as nn
 
 from pdgrapher._models import GCNArgs, ResponsePredictionModel, PerturbationDiscoveryModel
 from pdgrapher._utils import _test_condition
@@ -16,7 +17,7 @@ class PDGrapher:
     Prediction Model (RP) and Perturbation Discovery Model (PD).
     """
 
-    def __init__(self, edge_index, response_args: Dict[str, Any] = {},
+    def __init__(self, edge_index: torch.Tensor, response_args: Dict[str, Any] = {},
                  perturbation_args: Dict[str, Any] = {}, **kwargs: Any) -> None:
         """
         Initialization for PDGrapher. Handles ...

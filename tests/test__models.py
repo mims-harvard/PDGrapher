@@ -24,10 +24,12 @@ class TestGCNArgs(unittest.TestCase):
 class TestGCNBase(unittest.TestCase):
 
     edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
-    
+
     def test_empty_args(self):
         gcnargs = GCNArgs()
         gcnbase = GCNBase(gcnargs, "response", self.edge_index)
+        with self.assertRaises(NotImplementedError):
+            gcnbase.forward(None)
     
     def test_some_args(self):
         gcnargs = GCNArgs(n_layers_gnn=4, n_layers_nn=4)
@@ -41,7 +43,53 @@ class TestGCNBase(unittest.TestCase):
         # test number of GNN layers
         self.assertEqual(len(gcnbase.convs), 4)
         # test number of NN layers
-        self.assertEqual(len(gcnbase.mlp), 4+1) # specified + output layer
+        self.assertEqual(len(gcnbase.mlp), 1+4+1) # input + specified + output layers
+
+
+class TestResponsePredictionModel(unittest.TestCase):
+
+    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+
+    def test_empty_args(self):
+        gcnargs = GCNArgs()
+        model = ResponsePredictionModel(gcnargs, self.edge_index)
+    
+    def test_some_args(self):
+        gcnargs = GCNArgs(n_layers_gnn=2, n_layers_nn=2)
+        model = ResponsePredictionModel(gcnargs, self.edge_index)
+
+        # test if out_fun is identity
+        for i in range(100):
+            x = random.randint(0, 100)
+            self.assertEqual(model.out_fun(x), x)
+        
+        # test number of GNN layers
+        self.assertEqual(len(model.convs), 2)
+        # test number of NN layers
+        self.assertEqual(len(model.mlp), 1+2+1) # input + specified + output layers
+
+
+class TestPerturbationDiscoveryModel(unittest.TestCase):
+
+    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+
+    def test_empty_args(self):
+        gcnargs = GCNArgs()
+        model = PerturbationDiscoveryModel(gcnargs, self.edge_index)
+    
+    def test_some_args(self):
+        gcnargs = GCNArgs(n_layers_gnn=2, n_layers_nn=2)
+        model = PerturbationDiscoveryModel(gcnargs, self.edge_index)
+
+        # test if out_fun is identity
+        for i in range(100):
+            x = random.randint(0, 100)
+            self.assertEqual(model.out_fun(x), x)
+        
+        # test number of GNN layers
+        self.assertEqual(len(model.convs), 2)
+        # test number of NN layers
+        self.assertEqual(len(model.mlp), 1+2+1) # input + specified + output layers
 
 
 if __name__ == "__main__":

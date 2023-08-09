@@ -37,7 +37,7 @@ class GCNArgs():
 
 class GCNBase(nn.Module):
 
-    def __init__(self, args: GCNArgs, out_fun: str, edge_index: torch.tensor):
+    def __init__(self, args: GCNArgs, out_fun: str, edge_index: torch.Tensor):
         super().__init__()
 
         self.positional_features_dims = args.positional_features_dims
@@ -140,7 +140,7 @@ class GCNBase(nn.Module):
 
 class ResponsePredictionModel(GCNBase): # GCNModel
 
-    def __init__(self, args: GCNArgs, edge_index: torch.tensor):
+    def __init__(self, args: GCNArgs, edge_index: torch.Tensor):
         super().__init__(args, "response", edge_index)
 
         self.embed_layer_pert = EmbedLayer(args.num_vars, num_features=1, num_categs=2, hidden_dim=args.embedding_layer_dim)
