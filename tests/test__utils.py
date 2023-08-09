@@ -164,6 +164,16 @@ class TestTicToc(unittest.TestCase):
         printed_stdout = self.get_captured_stdout(fn)
         self.assertTrue(printed_stdout.startswith("Custom "))
         self.assertTrue(printed_stdout.endswith("secs\n"))
+
+    def test_output_custom_format(self):
+        @tictoc("Custom {:1.2f}secs")
+        def fn():
+            return 0
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.startswith("Custom "))
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+        self.assertEqual(len(printed_stdout), 15+1) # output + \n
     
     def test_wrong_format(self):
         with self.assertRaises(ValueError):
@@ -187,7 +197,17 @@ class TestTicToc(unittest.TestCase):
         printed_stdout = self.get_captured_stdout(fn)
         self.assertTrue(printed_stdout.startswith("Custom "))
         self.assertTrue(printed_stdout.endswith("secs\n"))
-    
+
+    def test_output_wrapped_custom_format(self):
+        def fn():
+            return 0
+        fn = tictoc(fn, "Custom {:1.2f}secs")
+
+        printed_stdout = self.get_captured_stdout(fn)
+        self.assertTrue(printed_stdout.startswith("Custom "))
+        self.assertTrue(printed_stdout.endswith("secs\n"))
+        self.assertEqual(len(printed_stdout), 15+1) # output + \n
+
     def test_wrapped_wrong_format(self):
         with self.assertRaises(ValueError):
             def fn():

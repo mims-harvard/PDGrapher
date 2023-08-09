@@ -162,7 +162,7 @@ class Trainer:
 
         return model_performance
 
-    @tictoc("Train call: {.2f}secs")
+    @tictoc("Train call: {:.2f}secs")
     def _train_one_pass(self, model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward,
                         thresholds, pos_weight) -> Tuple[float, float, float]:
         l_response = 0
@@ -236,7 +236,7 @@ class Trainer:
         )
 
     @torch.no_grad()
-    @tictoc("Validation call: {.2f}secs")
+    @tictoc("Validation call: {:.2f}secs")
     def _val_one_pass(self, model_1, model_2, es_1, es_2, val_loader_forward,
                       val_loader_backward, thresholds, pos_weight) -> Tuple[float, float]:
         l_response = 0
