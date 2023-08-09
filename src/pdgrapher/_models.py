@@ -76,7 +76,7 @@ class GCNBase(nn.Module):
 
         # Output function
         out_fun_selector = {'response': lambda x: x, 'perturbation': lambda x: x}
-        self.out_fun = out_fun_selector[out_fun]
+        self.out_fun = out_fun_selector.get(out_fun, lambda x: x)
 
         # dictionary storing, for each node, its place in edge_index where there
         # is an edge incoming to it (excluding self loops)

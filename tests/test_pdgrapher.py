@@ -1,6 +1,6 @@
 import unittest
 
-import torch
+from torch import load as torch_load
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
@@ -9,7 +9,7 @@ from pdgrapher import PDGrapher
 
 class TestPDGrapher(unittest.TestCase):
 
-    edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
 
     def test_pdgrapher(self):
         model = PDGrapher(self.edge_index)
