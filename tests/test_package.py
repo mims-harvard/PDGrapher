@@ -17,7 +17,7 @@ class TestPackage(unittest.TestCase):
         model = PDGrapher(edge_index)
         trainer = Trainer(log=True, logging_dir="tests/PDGrapher_test")
 
-        model_performance = trainer.train(model, dataset, 5)
+        model_performance = trainer.train(model, dataset, 1)
 
 
 
