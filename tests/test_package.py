@@ -17,9 +17,17 @@ class TestPackage(unittest.TestCase):
         model = PDGrapher(edge_index)
         trainer = Trainer(log=True, logging_dir="tests/PDGrapher_test")
 
-        model_performance = trainer.train(model, dataset, 1)
-
-
+        model_performance = trainer.train(model, dataset, 2)
+        
+        self.assertIn("train", model_performance)
+        self.assertIn("test", model_performance)
+        for key in [
+            "forward_spearman", "forward_mae", "forward_mse", "forward_r2",
+            "forward_r2_scgen", "backward_spearman", "backward_mae",
+            "backward_mse", "backward_r2", "backward_r2_scgen", "backward_avg_topk"
+        ]:
+            self.assertIn(key, model_performance["train"])
+            self.assertIn(key, model_performance["test"])
 
 
 if __name__ == "__main__":
