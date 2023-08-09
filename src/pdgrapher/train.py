@@ -22,9 +22,10 @@ class Trainer:
         # Logger
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
+        makedirs(self.logging_dir, exist_ok=True)
         self.writer = DummyWriter()
         self.log_train = kwargs.pop("log_train", True)
-        self.log_test = kwargs.pop("log_train", True)
+        self.log_test = kwargs.pop("log_test", True)
 
         # TODO other training parameters
         self.use_forward_data = kwargs.pop("use_forward_data", True)
@@ -58,12 +59,13 @@ class Trainer:
         # Optimizers & Schedulers
         model_1, model_2 = self._configure_model_with_optimizers_and_schedulers(model)
 
-        # Log model parameters
-        with open(osp.join(self.logging_dir, "params.txt"), "w") as log_params:
-            log_params.write("Response Prediction Model parameters:\t{}\n".format(sum(p.numel() for p in model_1.parameters())))
-            log_params.write("Perturbation Discovery Model parameters:\t{}\n".format(sum(p.numel() for p in model_2.parameters())))
-        # Log metrics
-        log_metrics = open(osp.join(self.logging_dir, "metrics.txt"), "w")
+        if self.use_logging:
+            # Log model parameters
+            with open(osp.join(self.logging_dir, "params.txt"), "w") as log_params:
+                log_params.write("Response Prediction Model parameters:\t{}\n".format(sum(p.numel() for p in model_1.parameters())))
+                log_params.write("Perturbation Discovery Model parameters:\t{}\n".format(sum(p.numel() for p in model_2.parameters())))
+            # Log metrics
+            log_metrics = open(osp.join(self.logging_dir, "metrics.txt"), "w")
 
         # Dataloaders
         (
@@ -128,7 +130,8 @@ class Trainer:
             summary = f"Epoch: {epoch:03d}, {end-start:.2f} seconds, Loss: {loss:.4f}"
             summary += summ_train + summ_test + "\n"
             print(summary)
-            log_metrics.write(summary)
+            if self.use_logging:
+                log_metrics.write(summary)
 
             # Early stopping
             if not es_1.is_stopped and es_1(val_loss_f):
@@ -137,8 +140,9 @@ class Trainer:
                 print("Early stopping model 2 (intervention discovery)")
             if es_1.is_stopped and es_2.is_stopped:
                 break
-
-        log_metrics.close()
+        
+        if self.use_logging:
+            log_metrics.close()
 
         train_perf = self._test_one_pass(model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward, thresholds)
         test_perf = self._test_one_pass(model_1, model_2, es_1, es_2, test_loader_forward, test_loader_backward, thresholds)
