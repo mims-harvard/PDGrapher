@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -c 1
 #SBATCH -t 1-02:00
-#SBATCH -p gpu0
+#SBATCH -p gpu
 #SBATCH --mem=20G
 #SBATCH --gres=gpu:1
 #SBATCH -o tests/test_%j.out
