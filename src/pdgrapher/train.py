@@ -19,22 +19,23 @@ from pdgrapher._utils import get_thresholds, calculate_loss_sample_weights, Dumm
 class Trainer:
 
     def __init__(self, **kwargs):
-        self.fabric = Fabric(**kwargs) # TODO should we use fabric?
-
         # Logger
         self.use_logging = kwargs.pop("log", False)
-        self.logging_dir = osp(kwargs.pop("logging_dir", "experiments/PDGrapher")) # default PDGrapher
+        self.logging_dir = osp(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
         self.writer = DummyWriter()
-        self.log_train = True
-        self.log_test = True
+        self.log_train = kwargs.pop("log_train", True)
+        self.log_test = kwargs.pop("log_train", True)
 
         # TODO other training parameters
-        self.use_forward_data = True
-        self.use_backward_data = False
-        self.use_intervention_data = True
-        self.use_supervision = False
-        self.supervision_multiplier = 1
-        self.use_lr_scheduler = False
+        self.use_forward_data = kwargs.pop("use_forward_data", True)
+        self.use_backward_data = kwargs.pop("use_backward_data", False)
+        self.use_intervention_data = kwargs.pop("use_intervention_data", True)
+        self.use_supervision = kwargs.pop("use_supervision", False)
+        self.supervision_multiplier = kwargs.pop("supervision_multiplier", 1)
+        self.use_lr_scheduler = kwargs.pop("use_lr_scheduler", False)
+
+        # All remaining kwargs go to Fabric
+        self.fabric = Fabric(**kwargs)
 
         # Placeholder functions for optimizers & schedulers (zero_grad and step)
         self._op1_zero_grad = lambda: None
@@ -46,7 +47,6 @@ class Trainer:
 
         # TODO support kfold?
         # No, this can be done with multiple train calls or multiple Trainer objects
-
 
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, **kwargs):
         # Loss weights, thresholds
@@ -156,7 +156,6 @@ class Trainer:
 
         return model_performance
 
-
     @tictoc("Train call: {.2f}secs")
     def _train_one_pass(self, model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward,
                         thresholds, pos_weight) -> Tuple[float, float, float]:
@@ -230,7 +229,6 @@ class Trainer:
             l_intervention/noptims_intervention if noptims_intervention else l_intervention
         )
 
-
     @torch.no_grad()
     @tictoc("Validation call: {.2f}secs")
     def _val_one_pass(self, model_1, model_2, es_1, es_2, val_loader_forward,
@@ -285,7 +283,6 @@ class Trainer:
             l_response/noptims_response if noptims_response else l_response,
             l_intervention/noptims_intervention if noptims_intervention else l_intervention
         )
-
 
     @torch.no_grad()
     def _test_one_pass(self, model_1, model_2, es_1, es_2, loader_forward, loader_backward, thresholds):
@@ -414,7 +411,6 @@ class Trainer:
             'backward_avg_topk': avg_topk
         }
 
-
     def _configure_model_with_optimizers_and_schedulers(self, model: PDGrapher) -> Tuple[_FabricModule, _FabricModule]:
         (optimizer_1, optimizer_2), (scheduler_1, scheduler_2) = model.get_optimizers_and_schedulers()
 
@@ -454,7 +450,6 @@ class Trainer:
 
         return model_1, model_2
 
-
     def _test_to_str(self, perf: Dict[str, float], kind: str) -> str:
         return (
             f", {kind} - FORWARD: MSE: {perf['forward_mse']:.4f}, MAE: {perf['forward_mae']:.4f}, "
@@ -463,7 +458,6 @@ class Trainer:
             f"MAE: {perf['backward_mae']:.4f}, R2: {perf['backward_r2']:.4f}, "
             f"R2 scgen: {perf['backward_r2_scgen']:.4f}, Spearman: {perf['backward_spearman']:.4f}, TopK: {perf['backward_avg_topk']:.4f}"
         )
-
 
     def _test_to_writer(self, perf: Dict[str, float], kind: str, epoch) -> None:
         for k, v in perf.items():
