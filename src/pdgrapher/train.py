@@ -264,7 +264,7 @@ class Trainer:
                 noptims_response += len(val_loader_backward)
 
         if not es_2.is_stopped:
-            if self.use_interv_data:
+            if self.use_intervention_data:
                 for data in val_loader_backward:
                     # Backward
                     # (1), (2) cycle loss with M_1 frozen
