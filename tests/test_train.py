@@ -10,8 +10,8 @@ class TestTrainer(unittest.TestCase):
 
     def test_trainer_args(self):
         trainer = Trainer(
-            log_train=False, use_backward_data=True, supervision_multiplier=1.3,
-            accelerator="cpu" # Fabric args
+            fabric_kwargs={"accelerator": "cpu"},
+            log_train=False, use_backward_data=True, supervision_multiplier=1.3
         )
 
         self.assertFalse(trainer.log_train)

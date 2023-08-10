@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 import os
 import string
 from time import perf_counter
@@ -120,23 +121,23 @@ class EarlyStopping:
         self.skip = skip
         self.patience = patience
         self.rope = abs(rope)
-        self.counter = 0
-        self.skip_counter = 0 # also counts epochs
-        self.is_stopped = False
 
         self.minmax = minmax
         self.comparison_f = (lambda x, y: x < y-self.rope) if self.minmax == "min" else (lambda x, y: x > y+self.rope)
-        self.value = float("inf") if self.minmax == "min" else -float("inf")
+        
+        self.reset()
 
         self.model: _FabricModule = model
         self.save_path: str = save_path
 
-        self.successful_comparison = (
-            lambda: torch.save({"epoch": self.skip_counter, "model_state_dict": self.model.module.state_dict()}, self.save_path)
-            if (self.save_path and self.model) else lambda: None
-        )
+        self.successful_comparison = (self._save_model if (self.save_path and self.model) else lambda: None)
+        self.load_model = (self._load_model if (self.save_path and self.model) else lambda: None)
 
-    def load_model(self) -> nn.Module:
+    def _save_model(self):
+        tmp_model = deepcopy(self.model.module)
+        torch.save({"epoch": self.skip_counter, "model_state_dict": tmp_model.cpu().state_dict()}, self.save_path)
+
+    def _load_model(self) -> nn.Module:
         checkpoint = torch.load(self.save_path)
         self.model.module.load_state_dict(checkpoint["model_state_dict"])
         return self.model.module
@@ -150,8 +151,9 @@ class EarlyStopping:
     def __call__(self, value):
         self.skip_counter += 1
         if self.skip_counter < self.skip:
-            self.counter = 0
-            self.successful_comparison()
+            if self.comparison_f(value, self.value): # even when skipping, save best value
+                self.value = value
+                self.successful_comparison()
             return False
 
         if self.comparison_f(value, self.value):

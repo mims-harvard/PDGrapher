@@ -17,24 +17,24 @@ class PDGrapher:
     Prediction Model (RP) and Perturbation Discovery Model (PD).
     """
 
-    def __init__(self, edge_index: torch.Tensor, *, model_args: Dict[str, Any] = {},
-                 response_args: Dict[str, Any] = {}, perturbation_args: Dict[str, Any] = {},
+    def __init__(self, edge_index: torch.Tensor, *, model_kwargs: Dict[str, Any] = {},
+                 response_kwargs: Dict[str, Any] = {}, perturbation_kwargs: Dict[str, Any] = {},
                  **kwargs: Dict[str, Any]) -> None:
         """
         Initialization for PDGrapher. Handles ...
 
         Args:
             edge_index (torch.Tensor): _description_
-            model_args (dict[str, Any]): Arguments for both models. They are
-            overwritten if some arguments are provided in response_args or
-            perturbation_args for that model. See bellow for all possible
+            model_kwargs (dict[str, Any]): Arguments for both models. They are
+            overwritten if some arguments are provided in response_kwargs or
+            perturbation_kwargs for that model. See bellow for all possible
             key:value pairs. Defaults to {}.
-            response_args (dict[str, Any]): Arguments for Response Prediction
+            response_kwargs (dict[str, Any]): Arguments for Response Prediction
             Model. See bellow for all possible key:value pairs. Defaults to {}.
-            perturbation_args (dict[str, Any]): Arguments for Perturbation
+            perturbation_kwargs (dict[str, Any]): Arguments for Perturbation
             Discovery Model. See bellow for all possible key:value pairs.
             Defaults to {}.
-        Next arguments apply to model_args, response_args, and perturbation_args.
+        Next arguments apply to model_kwargs, response_kwargs, and perturbation_kwargs.
             positional_features_dims (int): _description_. Defaults to 16.
             embedding_layer_dim (int): _description_. Defaults to 16.
             dim_gnn (int): _description_. Defaults to 16.
@@ -45,18 +45,18 @@ class PDGrapher:
             train (bool): Whether to train this model. Defaults to True.
         """
 
-        # Populate response_args and perturbation_args with default args from
+        # Populate response_kwargs and perturbation_kwargs with default args from
         # model_args
-        response_args = {**model_args, **response_args}
-        perturbation_args = {**model_args, **perturbation_args}
+        response_kwargs = {**model_kwargs, **response_kwargs}
+        perturbation_kwargs = {**model_kwargs, **perturbation_kwargs}
 
         # Pop kwargs related to response_prediction and perturbation_discovery
         # modules
-        self._train_response_prediction = response_args.pop("train", True)
-        self._train_perturbation_discovery = perturbation_args.pop("train", True)
+        self._train_response_prediction = response_kwargs.pop("train", True)
+        self._train_perturbation_discovery = perturbation_kwargs.pop("train", True)
 
-        rp_args = GCNArgs.from_dict(response_args)
-        pd_args = GCNArgs.from_dict(perturbation_args)
+        rp_args = GCNArgs.from_dict(response_kwargs)
+        pd_args = GCNArgs.from_dict(perturbation_kwargs)
 
         # Models
         self.response_prediction: nn.Module = ResponsePredictionModel(rp_args, edge_index)

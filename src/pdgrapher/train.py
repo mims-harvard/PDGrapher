@@ -1,6 +1,6 @@
 from os import makedirs, path as osp
 from time import perf_counter
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 from lightning import Fabric
 from lightning.fabric.wrappers import _FabricModule
@@ -18,7 +18,7 @@ from pdgrapher._utils import get_thresholds, calculate_loss_sample_weights, Dumm
 
 class Trainer:
 
-    def __init__(self, **kwargs):
+    def __init__(self, fabric_kwargs: Dict[str, Any] = {}, **kwargs):
         # Logger
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
@@ -27,7 +27,7 @@ class Trainer:
         self.log_train = kwargs.pop("log_train", True)
         self.log_test = kwargs.pop("log_test", True)
 
-        # TODO other training parameters
+        # Other training parameters
         self.use_forward_data = kwargs.pop("use_forward_data", True)
         self.use_backward_data = kwargs.pop("use_backward_data", False)
         self.use_intervention_data = kwargs.pop("use_intervention_data", True)
@@ -35,8 +35,8 @@ class Trainer:
         self.supervision_multiplier = kwargs.pop("supervision_multiplier", 1)
         self.use_lr_scheduler = kwargs.pop("use_lr_scheduler", False)
 
-        # All remaining kwargs go to Fabric
-        self.fabric = Fabric(**kwargs)
+        # Fabric setup
+        self.fabric = Fabric(**fabric_kwargs)
 
         # Placeholder functions for optimizers & schedulers (zero_grad and step)
         self._op1_zero_grad = lambda: None
@@ -49,7 +49,7 @@ class Trainer:
         # TODO support kfold?
         # No, this can be done with multiple train calls or multiple Trainer objects
 
-    def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, **kwargs):
+    def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
         pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
@@ -77,10 +77,10 @@ class Trainer:
         ) = self.fabric.setup_dataloaders(*dataset.get_dataloaders())
 
         # Early stopping
-        es_1 = EarlyStopping(model=model_1, save_path=osp.join(self.logging_dir, "model_response_prediction.pt"))
+        es_1 = EarlyStopping(model=model_1, save_path=osp.join(self.logging_dir, "model_response_prediction.pt"), **early_stopping_kwargs)
+        es_2 = EarlyStopping(model=model_2, save_path=osp.join(self.logging_dir, "model_perturbation_discovery.pt"), **early_stopping_kwargs)
         if not model._train_response_prediction:
             es_1.is_stopped = True
-        es_2 = EarlyStopping(model=model_2, save_path=osp.join(self.logging_dir, "model_perturbation_discovery.pt"))
         if not model._train_perturbation_discovery:
             es_2.is_stopped = True
 
@@ -180,8 +180,9 @@ class Trainer:
                     loss_forward = mse_loss(output_forward.view(-1), data.diseased)
                     self.fabric.backward(loss_forward)
                     self._op1_step() # optimizer_1.step()
-                    self._sc1_step() # if self.use_lr_scheduler: scheduler_1.step()
+                    # if self.use_lr_scheduler: scheduler_1.step()
                     l_response += float(loss_forward)
+                self._sc1_step()
                 noptims_response += len(train_loader_forward)
             if self.use_backward_data:
                 for data in train_loader_backward:
@@ -190,8 +191,9 @@ class Trainer:
                     loss_forward = mse_loss(output_forward.view(-1), data.treated)
                     self.fabric.backward(loss_forward)
                     self._op1_step() # optimizer_1.step()
-                    self._sc1_step() # if self.use_lr_scheduler: scheduler_1.step()
+                    # if self.use_lr_scheduler: scheduler_1.step()
                     l_response += float(loss_forward)
+                self._sc1_step()
                 noptims_response += len(train_loader_backward)
 
         # Do we train the perturbagen discovery model?
@@ -211,8 +213,9 @@ class Trainer:
                         loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
                     self.fabric.backward(loss_backward)
                     self._op2_step() # optimizer_2.step()
-                    self._sc2_step() # if self.use_lr_scheduler: scheduler_2.step()
+                    # if self.use_lr_scheduler: scheduler_2.step()
                     l_intervention += float(loss_backward)
+                self._sc2_step()
                 noptims_intervention += len(train_loader_backward)
             elif self.use_supervision:
                 for data in train_loader_backward:
@@ -222,8 +225,9 @@ class Trainer:
                     loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
                     self.fabric.backward(loss_backward)
                     self._op2_step() # optimizer_2.step()
-                    self._sc2_step() # if self.use_lr_scheduler: scheduler_2.step()
+                    # if self.use_lr_scheduler: scheduler_2.step()
                     l_intervention += float(loss_backward)
+                self._sc2_step()
                 noptims_intervention += len(train_loader_backward)
 
         total_loss = l_response + l_intervention
