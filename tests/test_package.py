@@ -16,7 +16,7 @@ class TestPackage(unittest.TestCase):
         )
         edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
         model = PDGrapher(edge_index)
-        trainer = Trainer(log=True, logging_dir="tests/PDGrapher_test")
+        trainer = Trainer(log=True, logging_dir="tests/PDGrapher_test", accelerator="gpu")
 
         model_performance = trainer.train(model, dataset, 2)
 
