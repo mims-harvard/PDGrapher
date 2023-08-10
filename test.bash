@@ -2,7 +2,7 @@
 #SBATCH -c 1
 #SBATCH -t 1-02:00
 #SBATCH -p gpu
-#SBATCH --mem=20G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH -o tests/test_%j.out
 #SBATCH -e tests/test_%j.err
