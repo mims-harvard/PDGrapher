@@ -4,6 +4,7 @@ import string
 from time import perf_counter
 from typing import Tuple, Callable
 
+from lightning.fabric.wrappers import _FabricModule
 import torch
 import torch.nn as nn
 
@@ -114,7 +115,7 @@ def load_best_model(model, file, outdir):
 class EarlyStopping:
 
     def __init__(self, patience: int = 15, skip: int = 0, minmax: str = "min", rope: float = 1e-5,
-                 model: nn.Module = None, save_path: str = None):
+                 model: _FabricModule = None, save_path: str = None):
 
         self.skip = skip
         self.patience = patience
@@ -127,18 +128,18 @@ class EarlyStopping:
         self.comparison_f = (lambda x, y: x < y-self.rope) if self.minmax == "min" else (lambda x, y: x > y+self.rope)
         self.value = float("inf") if self.minmax == "min" else -float("inf")
 
-        self.model: nn.Module = model
+        self.model: _FabricModule = model
         self.save_path: str = save_path
 
         self.successful_comparison = (
-            lambda: torch.save({"epoch": self.skip_counter, "model_state_dict": self.model.state_dict()}, self.save_path)
+            lambda: torch.save({"epoch": self.skip_counter, "model_state_dict": self.model.module.state_dict()}, self.save_path)
             if (self.save_path and self.model) else lambda: None
         )
 
-    def load_model(self):
+    def load_model(self) -> nn.Module:
         checkpoint = torch.load(self.save_path)
-        self.model.load_state_dict(checkpoint["model_state_dict"])
-        return self.model
+        self.model.module.load_state_dict(checkpoint["model_state_dict"])
+        return self.model.module
 
     def reset(self):
         self.counter = 0

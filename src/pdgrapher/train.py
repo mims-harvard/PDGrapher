@@ -105,7 +105,7 @@ class Trainer:
                 train_performance = self._test_one_pass(
                     model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward, thresholds)
                 toc = perf_counter()
-                print(f"Test call (train dataset): {toc-tic}secs")
+                print(f"Test call (train dataset): {toc-tic:.2f}secs")
                 summ_train = self._test_to_str(train_performance, "TRAIN")
                 self._test_to_writer(train_performance, "train", epoch)
 
@@ -115,7 +115,7 @@ class Trainer:
                 test_performance = self._test_one_pass(
                     model_1, model_2, es_1, es_2, test_loader_forward, test_loader_backward, thresholds)
                 toc = perf_counter()
-                print(f"Test call (test dataset): {toc-tic}secs")
+                print(f"Test call (test dataset): {toc-tic:.2f}secs")
                 summ_test = self._test_to_str(test_performance, "TEST")
                 self._test_to_writer(test_performance, "test", epoch)
 

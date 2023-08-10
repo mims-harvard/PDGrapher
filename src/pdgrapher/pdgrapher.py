@@ -17,20 +17,24 @@ class PDGrapher:
     Prediction Model (RP) and Perturbation Discovery Model (PD).
     """
 
-    def __init__(self, edge_index: torch.Tensor, response_args: Dict[str, Any] = {},
-                 perturbation_args: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, edge_index: torch.Tensor, *, model_args: Dict[str, Any] = {},
+                 response_args: Dict[str, Any] = {}, perturbation_args: Dict[str, Any] = {},
+                 **kwargs: Dict[str, Any]) -> None:
         """
         Initialization for PDGrapher. Handles ...
 
         Args:
-            edge_index (_type_): _description_
+            edge_index (torch.Tensor): _description_
+            model_args (dict[str, Any]): Arguments for both models. They are
+            overwritten if some arguments are provided in response_args or
+            perturbation_args for that model. See bellow for all possible
+            key:value pairs. Defaults to {}.
             response_args (dict[str, Any]): Arguments for Response Prediction
-                Model. See bellow for all possible key:value pairs. Defaults to
-                {}.
+            Model. See bellow for all possible key:value pairs. Defaults to {}.
             perturbation_args (dict[str, Any]): Arguments for Perturbation
-                Discovery Model. See bellow for all possible key:value pairs.
-                Defaults to {}.
-        Next arguments apply to both to response_args and perturbation_args.
+            Discovery Model. See bellow for all possible key:value pairs.
+            Defaults to {}.
+        Next arguments apply to model_args, response_args, and perturbation_args.
             positional_features_dims (int): _description_. Defaults to 16.
             embedding_layer_dim (int): _description_. Defaults to 16.
             dim_gnn (int): _description_. Defaults to 16.
@@ -40,6 +44,11 @@ class PDGrapher:
             n_layers_nn (int): _description_. Defaults to 2.
             train (bool): Whether to train this model. Defaults to True.
         """
+
+        # Populate response_args and perturbation_args with default args from
+        # model_args
+        response_args = {**model_args, **response_args}
+        perturbation_args = {**model_args, **perturbation_args}
 
         # Pop kwargs related to response_prediction and perturbation_discovery
         # modules

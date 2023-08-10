@@ -9,10 +9,10 @@ def main():
         splits_path="data/splits/genetic/A549/random/1fold/splits.pt"
     )
     edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
-    model = PDGrapher(edge_index)
-    trainer = Trainer()
+    model = PDGrapher(edge_index, model_args={"n_layers_nn": 1, "n_layers_gnn": 2})
+    trainer = Trainer(log=True, use_forward_data=True, use_backward_data=True, supervision_multiplier=0.01)
 
-    train_metrics = trainer.train(model, dataset, 10)
+    train_metrics = trainer.train(model, dataset, 50)
     print(train_metrics)
 
 
