@@ -1,6 +1,7 @@
 import unittest
 
 from torch import load as torch_load
+from torch.nn import Module as nn_Module
 
 from pdgrapher import PDGrapher, Dataset, Trainer
 
@@ -18,7 +19,12 @@ class TestPackage(unittest.TestCase):
         trainer = Trainer(log=True, logging_dir="tests/PDGrapher_test")
 
         model_performance = trainer.train(model, dataset, 2)
+
+        # Check model types, should not be _Fabric_Module
+        self.assertIsInstance(model.response_prediction, nn_Module)
+        self.assertIsInstance(model.perturbation_discovery, nn_Module)
         
+        # Check return value
         self.assertIn("train", model_performance)
         self.assertIn("test", model_performance)
         for key in [

@@ -151,6 +151,7 @@ class EarlyStopping:
         self.skip_counter += 1
         if self.skip_counter < self.skip:
             self.counter = 0
+            self.successful_comparison()
             return False
 
         if self.comparison_f(value, self.value):
