@@ -16,7 +16,7 @@ class TestDataset(unittest.TestCase):
         # test dataloaders
         dataloaders = dataset.get_dataloaders()
         self.assertEqual(len(dataloaders), 6)
-    
+
     def test_multiple_folds(self):
         # test creation
         dataset = Dataset(

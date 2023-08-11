@@ -56,10 +56,10 @@ class Dataset:
 
     def _test_indices(self, fold_splits):
         set_trif = set(fold_splits["train_index_forward"])
-        set_vif = set(fold_splits["train_index_backward"])
-        set_teif = set(fold_splits["val_index_forward"])
-        set_trib = set(fold_splits["val_index_backward"])
-        set_vib = set(fold_splits["test_index_forward"])
+        set_trib = set(fold_splits["train_index_backward"])
+        set_vif = set(fold_splits["val_index_forward"])
+        set_vib = set(fold_splits["val_index_backward"])
+        set_teif = set(fold_splits["test_index_forward"])
         set_teib = set(fold_splits["test_index_backward"])
         _test_condition(not any(x in set_vif for x in set_trif), "Overlap between train and validation indices should be zero (forward)")
         _test_condition(not any(x in set_teif for x in set_trif), "Overlap between train and test indices should be zero (forward)")
