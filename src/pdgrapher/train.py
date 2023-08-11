@@ -22,6 +22,7 @@ class Trainer:
         # Logger
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
+        self.logging_name = kwargs.pop("logging_name", "PDGrapher")
         makedirs(self.logging_dir, exist_ok=True)
         self.writer = DummyWriter()
         self.log_train = kwargs.pop("log_train", True)
@@ -49,6 +50,12 @@ class Trainer:
         # TODO support kfold?
         # No, this can be done with multiple train calls or multiple Trainer objects
 
+    def logging_paths(self, *, path: str = None, name: str = None):
+        if path:
+            self.logging_dir = osp.abspath(path)
+        if name:
+            self.logging_name = name
+
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
@@ -63,11 +70,11 @@ class Trainer:
 
         if self.use_logging:
             # Log model parameters
-            with open(osp.join(self.logging_dir, "params.txt"), "w") as log_params:
+            with open(osp.join(self.logging_dir, f"{self.logging_name}_params.txt"), "w") as log_params:
                 log_params.write("Response Prediction Model parameters:\t{}\n".format(sum(p.numel() for p in model_1.parameters())))
                 log_params.write("Perturbation Discovery Model parameters:\t{}\n".format(sum(p.numel() for p in model_2.parameters())))
             # Log metrics
-            log_metrics = open(osp.join(self.logging_dir, "metrics.txt"), "w")
+            log_metrics = open(osp.join(self.logging_dir, f"{self.logging_name}_metrics.txt"), "w")
 
         # Dataloaders
         (
@@ -77,8 +84,8 @@ class Trainer:
         ) = self.fabric.setup_dataloaders(*dataset.get_dataloaders())
 
         # Early stopping
-        es_1 = EarlyStopping(model=model_1, save_path=osp.join(self.logging_dir, "model_response_prediction.pt"), **early_stopping_kwargs)
-        es_2 = EarlyStopping(model=model_2, save_path=osp.join(self.logging_dir, "model_perturbation_discovery.pt"), **early_stopping_kwargs)
+        es_1 = EarlyStopping(model=model_1, save_path=osp.join(self.logging_dir, f"{self.logging_name}_response_prediction.pt"), **early_stopping_kwargs)
+        es_2 = EarlyStopping(model=model_2, save_path=osp.join(self.logging_dir, f"{self.logging_name}_perturbation_discovery.pt"), **early_stopping_kwargs)
         if not model._train_response_prediction:
             es_1.is_stopped = True
         if not model._train_perturbation_discovery:
@@ -142,7 +149,7 @@ class Trainer:
                 print("Early stopping model 2 (intervention discovery)")
             if es_1.is_stopped and es_2.is_stopped:
                 break
-        
+
         if self.use_logging:
             log_metrics.close()
 
