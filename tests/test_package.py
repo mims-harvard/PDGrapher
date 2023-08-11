@@ -1,5 +1,5 @@
 import unittest
-import os.path as osp
+import os
 
 from torch import load as torch_load
 from torch.nn import Module as nn_Module
@@ -7,7 +7,19 @@ from torch.nn import Module as nn_Module
 from pdgrapher import PDGrapher, Dataset, Trainer
 
 
+def clean_folder_before_test():
+    for file in os.listdir("tests/PDGrapher_test"):
+        if file == ".keep":
+            continue
+        if os.path.isfile(file):
+            os.unlink(file)
+
+
 class TestPackage(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        clean_folder_before_test()
 
     def test_single_fold(self):
         dataset = Dataset(
@@ -39,10 +51,10 @@ class TestPackage(unittest.TestCase):
             self.assertIn(key, model_performance["test"])
         
         # Check if all files exist
-        self.assertTrue(osp.isfile(osp.abspath("tests/PDGrapher_test/params.txt")))
-        self.assertTrue(osp.isfile(osp.abspath("tests/PDGrapher_test/metrics.txt")))
-        self.assertTrue(osp.isfile(osp.abspath("tests/PDGrapher_test/response_prediction.pt")))
-        self.assertTrue(osp.isfile(osp.abspath("tests/PDGrapher_test/perturbation_discovery.pt")))
+        self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/params.txt")))
+        self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/metrics.txt")))
+        self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/response_prediction.pt")))
+        self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/perturbation_discovery.pt")))
 
     def test_multiple_folds(self):
         dataset = Dataset(
@@ -66,10 +78,10 @@ class TestPackage(unittest.TestCase):
 
         # Check if all fold files have been created
         for fold_idx in range(dataset.num_of_folds):
-            self.assertTrue(osp.isfile(osp.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_params.txt")))
-            self.assertTrue(osp.isfile(osp.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_metrics.txt")))
-            self.assertTrue(osp.isfile(osp.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_response_prediction.pt")))
-            self.assertTrue(osp.isfile(osp.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_perturbation_discovery.pt")))
+            self.assertTrue(os.path.isfile(os.path.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_params.txt")))
+            self.assertTrue(os.path.isfile(os.path.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_metrics.txt")))
+            self.assertTrue(os.path.isfile(os.path.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_response_prediction.pt")))
+            self.assertTrue(os.path.isfile(os.path.abspath(f"tests/PDGrapher_test/fold_{fold_idx}_perturbation_discovery.pt")))
 
 
 if __name__ == "__main__":
