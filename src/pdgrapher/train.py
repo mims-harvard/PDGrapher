@@ -393,8 +393,9 @@ class Trainer:
                 y = np.mean(real_ys[sample_indices, :], 0).ravel()
                 backward_r_value = linregress(x, y).rvalue
                 backward_r2_values.append(backward_r_value**2)
-                backward_spearman.append(spearmanr(real_ys[i, :], score_ys[i, :]).correlation)
-                backward_pearson.append(pearsonr(real_ys[i, :], score_ys[i, :]).statistic)
+            for ry, sy in zip(real_ys, score_ys):
+                backward_spearman.append(spearmanr(ry, sy).correlation)
+                backward_pearson.append(pearsonr(ry, sy).statistic)
             backward_r2_value = np.mean(backward_r2_values)
             backward_spearman = np.mean(backward_spearman)
             backward_pearson = np.mean(backward_pearson)
