@@ -35,7 +35,7 @@ class Dataset:
     def prepare_fold(self, fold_idx: int = 0):
         if self.num_of_folds > 1:
             _test_condition(isinstance(fold_idx, int), "'fold_idx' must be an integer")
-            _test_condition(0 <= fold_idx < len(self.splits), f"'fold_idx' must be between 0 and {len(len(self.splits))-1}")
+            _test_condition(0 <= fold_idx < len(self.splits), f"'fold_idx' must be between 0 and {len(self.splits)-1}")
             fold_splits = self.splits[fold_idx]
         else:
             fold_splits = self.splits
