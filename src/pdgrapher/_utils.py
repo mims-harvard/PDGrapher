@@ -127,8 +127,8 @@ class EarlyStopping:
         
         self.reset()
 
-        self.model: _FabricModule = model
-        self.save_path: str = save_path
+        self.model = model
+        self.save_path = save_path
 
         self.successful_comparison = (self._save_model if (self.save_path and self.model) else lambda: None)
         self.load_model = (self._load_model if (self.save_path and self.model) else lambda: None)
