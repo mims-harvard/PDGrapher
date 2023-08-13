@@ -9,9 +9,11 @@ from lightning.fabric.wrappers import _FabricModule
 import torch
 import torch.nn as nn
 
+
 def _test_condition(condition: bool, text: str):
     if not condition:
         raise ValueError(text)
+
 
 # SAMPLE WEIGHTS
 """ def cal_weights_model_1_forward(dataset):
@@ -124,7 +126,7 @@ class EarlyStopping:
 
         self.minmax = minmax
         self.comparison_f = (lambda x, y: x < y-self.rope) if self.minmax == "min" else (lambda x, y: x > y+self.rope)
-        
+
         self.reset()
 
         self.model = model

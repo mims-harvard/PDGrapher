@@ -1,6 +1,8 @@
+from copy import deepcopy
 from os import makedirs, path as osp
 from time import perf_counter
 from typing import Dict, Tuple, Any
+import warnings
 
 from lightning import Fabric
 from lightning.fabric.wrappers import _FabricModule
@@ -9,7 +11,7 @@ from scipy.stats import pearsonr, spearmanr, linregress
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import torch
 from torch.nn.functional import mse_loss, binary_cross_entropy_with_logits
-#from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
 from pdgrapher.datasets import Dataset
 from pdgrapher.pdgrapher import PDGrapher
@@ -59,6 +61,8 @@ class Trainer:
                 self.logging_name += "_"
 
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
+        if dataset.num_of_folds > 1:
+            warnings.warn("'dataset' has multiple folds, it will train only on the default fold")
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
         pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
@@ -170,6 +174,21 @@ class Trainer:
             model.perturbation_discovery = es_2.load_model()
 
         return model_performance
+
+    def train_kfold(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
+        model_performances = list()
+
+        if dataset.num_of_folds == 1:
+            warnings.warn("'dataset' has only 1 fold, it would be better to use .train() function")
+
+        for fold_idx in range(dataset.num_of_folds):
+            dataset.prepare_fold(fold_idx)
+            self.logging_paths(name=f"fold_{fold_idx}")
+            model_tmp = deepcopy(model)
+            train_metrics = self.train(model_tmp, dataset, n_epochs, early_stopping_kwargs)
+            model_performances.append(train_metrics)
+
+        return model_performances
 
     @tictoc("Train call: {:.2f}secs")
     def _train_one_pass(self, model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward,

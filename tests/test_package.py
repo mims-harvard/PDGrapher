@@ -63,18 +63,15 @@ class TestPackage(unittest.TestCase):
             splits_path="data/splits/genetic/A549/random/5fold/splits.pt"
         )
         edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+        model = PDGrapher(edge_index)
         trainer = Trainer(
             fabric_kwargs={"accelerator": "gpu"}, log=True, logging_dir="tests/PDGrapher_test"
         )
 
-        for fold_idx in range(dataset.num_of_folds):
-            dataset.prepare_fold(fold_idx)
-            trainer.logging_paths(name=f"fold_{fold_idx}_")
+        train_metrics = trainer.train_kfold(model, dataset, 1)
 
-            model = PDGrapher(edge_index)
-
-            train_metrics = trainer.train(model, dataset, 1)
-            print(train_metrics)
+        self.assertIsInstance(train_metrics, list)
+        self.assertEqual(len(train_metrics), 5)
 
         # Check if all fold files have been created
         for fold_idx in range(dataset.num_of_folds):

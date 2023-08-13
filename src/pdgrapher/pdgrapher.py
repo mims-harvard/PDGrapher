@@ -118,10 +118,10 @@ class PDGrapher:
             schedulers (list[None, LRScheduler, list[LRScheduler]], optional): _description_. Defaults to [None, None].
         """
         # Check if optimizers len is ok
-        _test_condition(isinstance(optimizers, list), f"Parameter `optimizers` needs to be a list!")
+        _test_condition(isinstance(optimizers, list), "Parameter `optimizers` needs to be a list!")
         _test_condition(len(optimizers) == 2, f"Parameter `optimizers` needs to be a list of length 2, but length {len(optimizers)} was detected!")
         # Check if schedulers len is ok
-        _test_condition(isinstance(schedulers, list), f"Parameter `schedulers` needs to be a list!")
+        _test_condition(isinstance(schedulers, list), "Parameter `schedulers` needs to be a list!")
         _test_condition(len(schedulers) == 2, f"Parameter `schedulers` needs to be a list of length 2, but length {len(schedulers)} was provided!")
         # Check for each optimizer if it is connected to the correct model
         _test_condition(self._check_optimizers(self.response_prediction, self.perturbation_discovery, optimizers[0]), "One of the provided optimizers for the Response Prediction Model has no association with it!")
