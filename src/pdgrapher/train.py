@@ -2,7 +2,6 @@ from copy import deepcopy
 from os import makedirs, path as osp
 from time import perf_counter
 from typing import Dict, Tuple, Any
-import warnings
 
 from lightning import Fabric
 from lightning.fabric.wrappers import _FabricModule
@@ -61,8 +60,6 @@ class Trainer:
                 self.logging_name += "_"
 
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
-        if dataset.num_of_folds > 1:
-            warnings.warn("'dataset' has multiple folds, it will train only on the default fold")
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
         pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
@@ -177,9 +174,6 @@ class Trainer:
 
     def train_kfold(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         model_performances = list()
-
-        if dataset.num_of_folds == 1:
-            warnings.warn("'dataset' has only 1 fold, it would be better to use .train() function")
 
         for fold_idx in range(dataset.num_of_folds):
             dataset.prepare_fold(fold_idx)
