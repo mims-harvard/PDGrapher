@@ -24,7 +24,6 @@ class Trainer:
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
         self.logging_name = kwargs.pop("logging_name", "")
-        makedirs(self.logging_dir, exist_ok=True)
         self.writer = DummyWriter()
         self.log_train = kwargs.pop("log_train", True)
         self.log_test = kwargs.pop("log_test", True)
@@ -78,6 +77,7 @@ class Trainer:
                 log_params.write("Perturbation Discovery Model parameters:\t{}\n".format(sum(p.numel() for p in model_2.parameters())))
             # Log metrics
             log_metrics = open(osp.join(self.logging_dir, f"{self.logging_name}metrics.txt"), "w")
+        makedirs(self.logging_dir, exist_ok=True)
 
         # Dataloaders
         (
@@ -204,7 +204,7 @@ class Trainer:
                     self._op1_step() # optimizer_1.step()
                     # if self.use_lr_scheduler: scheduler_1.step()
                     l_response += float(loss_forward)
-                self._sc1_step()
+                    self._sc1_step()
                 noptims_response += len(train_loader_forward)
             if self.use_backward_data:
                 for data in train_loader_backward:
@@ -215,7 +215,7 @@ class Trainer:
                     self._op1_step() # optimizer_1.step()
                     # if self.use_lr_scheduler: scheduler_1.step()
                     l_response += float(loss_forward)
-                self._sc1_step()
+                    self._sc1_step()
                 noptims_response += len(train_loader_backward)
 
         # Do we train the perturbagen discovery model?
@@ -237,7 +237,7 @@ class Trainer:
                     self._op2_step() # optimizer_2.step()
                     # if self.use_lr_scheduler: scheduler_2.step()
                     l_intervention += float(loss_backward)
-                self._sc2_step()
+                    self._sc2_step()
                 noptims_intervention += len(train_loader_backward)
             elif self.use_supervision:
                 for data in train_loader_backward:
@@ -249,7 +249,7 @@ class Trainer:
                     self._op2_step() # optimizer_2.step()
                     # if self.use_lr_scheduler: scheduler_2.step()
                     l_intervention += float(loss_backward)
-                self._sc2_step()
+                    self._sc2_step()
                 noptims_intervention += len(train_loader_backward)
 
         total_loss = l_response + l_intervention
