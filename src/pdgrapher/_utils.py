@@ -50,7 +50,7 @@ def cal_weights_model_2_backward(dataset):
     return torch.tensor([n_full / (2 * n_negative), n_full / (2 * n_positive)]) """
 
 
-def calculate_loss_sample_weights(dataset, kind: str) -> Tuple[int, int]:
+def calculate_loss_sample_weights(dataset, kind: str) -> torch.Tensor:
     _test_condition(kind in {"diseased", "treated", "intervention"}, "`kind` should be one of (diseased, treated, intervention)")
     labels = []
     for data in dataset:
@@ -59,7 +59,7 @@ def calculate_loss_sample_weights(dataset, kind: str) -> Tuple[int, int]:
     n_positive = labels_tensor.nonzero().size(0)
     n_negative = labels_tensor.size(0) - n_positive
     n_full = labels_tensor.size(0)
-    return n_full/(2*n_negative), n_full/(2*n_positive)
+    return torch.tensor([n_full/(2*n_negative), n_full/(2*n_positive)])
 
 
 """ def get_threshold_healthy(dataset):

@@ -61,6 +61,7 @@ class Trainer:
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
+        sample_weights_model_2_backward = self.fabric.to_device(sample_weights_model_2_backward)
         pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
         thresholds = get_thresholds(dataset)
         thresholds = {k: self.fabric.to_device(v) for k, v in thresholds.items()} # do we really need them?
