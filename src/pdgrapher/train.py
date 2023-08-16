@@ -157,6 +157,9 @@ class Trainer:
         if self.use_logging:
             log_metrics.close()
 
+        # Enable testing of the models
+        es_1.is_stopped = False
+        es_2.is_stopped = False
         train_perf = self._test_one_pass(model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward, thresholds)
         test_perf = self._test_one_pass(model_1, model_2, es_1, es_2, test_loader_forward, test_loader_backward, thresholds)
 
