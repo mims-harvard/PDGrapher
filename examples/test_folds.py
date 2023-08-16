@@ -31,7 +31,8 @@ def main():
         checkpoint = torch.load(save_path)
         model.perturbation_discovery.load_state_dict(checkpoint["model_state_dict"])
         dataset.prepare_fold(fold)
-        train_metrics = trainer.train(model, dataset, 0)
+        trainer.logging_paths(name=f"fold_{fold}_")
+        train_metrics = trainer.train(model, dataset, -1) # no training
         print(train_metrics)
 
 
