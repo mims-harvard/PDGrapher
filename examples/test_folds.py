@@ -29,7 +29,7 @@ def main():
         # restore Perturbation discovery
         save_path = f"examples/PDGrapher/fold_{fold}_perturbation_discovery.pt"
         checkpoint = torch.load(save_path)
-        model.response_prediction.load_state_dict(checkpoint["model_state_dict"])
+        model.perturbation_discovery.load_state_dict(checkpoint["model_state_dict"])
         dataset.prepare_fold(fold)
         train_metrics = trainer.train(model, dataset, 0)
         print(train_metrics)
