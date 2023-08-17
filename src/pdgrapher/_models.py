@@ -40,7 +40,6 @@ class GCNBase(nn.Module):
     def __init__(self, args: GCNArgs, out_fun: str, edge_index: torch.Tensor):
         super().__init__()
 
-        self.positional_features_dims = args.positional_features_dims
         self.edge_index = edge_index
 
         # Conv layers
@@ -57,22 +56,22 @@ class GCNBase(nn.Module):
 
         # Batchnorm GNN
         self.bns = nn.ModuleList()
-        for i in range(args.n_layers_gnn):
+        for _ in range(args.n_layers_gnn):
             self.bns.append(nn.BatchNorm1d(args.dim_gnn + 2*args.embedding_layer_dim))
 
         # NN layers
         self.mlp = nn.ModuleList()
-        self.mlp.append(nn.Linear(2*args.embedding_layer_dim + args.dim_gnn, args.dim_gnn))
+        self.mlp.append(nn.Linear(args.dim_gnn + 2*args.embedding_layer_dim, args.dim_gnn))
         for _ in range(args.n_layers_nn-1):
             self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn))
-        self.mlp.append(nn.Linear(args.dim_gnn, int(args.dim_gnn/2)))
-        self.mlp.append(nn.Linear(int(args.dim_gnn/2), args.out_channels))
+        self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn//2)) # int(args.dim_gnn/2)
+        self.mlp.append(nn.Linear(args.dim_gnn//2, args.out_channels)) # int(args.dim_gnn/2)
 
         # Batchnorm MLP
         self.bns_mlp = nn.ModuleList()
         for _ in range(args.n_layers_nn):
             self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn))
-        self.bns_mlp.append(nn.BatchNorm1d(int(args.dim_gnn/2)))
+        self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn//2)) # int(args.dim_gnn/2)
 
         # Output function
         out_fun_selector = {'response': lambda x: x, 'perturbation': lambda x: x}
@@ -80,7 +79,6 @@ class GCNBase(nn.Module):
 
         # dictionary storing, for each node, its place in edge_index where there
         # is an edge incoming to it (excluding self loops)
-        self.dictionary_node_to_edge_index_position = defaultdict(list)
         self.build_dictionary_node_to_edge_index_position()
 
         self._mutilate_graph = True
@@ -131,6 +129,7 @@ class GCNBase(nn.Module):
         # dictionary storing, for each node, its place in edge_index where
         # there is an edge incoming to it (excluding self loops)
         # will be used to build x_j_mask in get_embeddings()
+        self.dictionary_node_to_edge_index_position = defaultdict(list)
         for i in range(self.edge_index.size(1)):
             node = self.edge_index[1, i].item()
             if node == self.edge_index[0, i].item():
@@ -146,7 +145,7 @@ class ResponsePredictionModel(GCNBase): # GCNModel
         self.embed_layer_pert = EmbedLayer(args.num_vars, num_features=1, num_categs=2, hidden_dim=args.embedding_layer_dim)
         self.embed_layer_ge = EmbedLayer(args.num_vars, num_features=1, num_categs=500, hidden_dim=args.embedding_layer_dim)
 
-    # TODO def forward(self, x_d, perturbagen) -> x_t
+
     def forward(self, x, batch, topK=None, binarize_intervention=False, mutilate_mutations=None, threshold_input=None):
         '''
         GCN model adapted to use 1 single edge_index for all samples in the batch
@@ -212,8 +211,8 @@ class PerturbationDiscoveryModel(GCNBase): # GCNModelInterventionDiscovery
         nn.init.normal_(random_dims)
 
         # Feature embedding
-        x_diseased, _ = self.embed_layer_diseased(x[:, 0].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input['diseased'])
-        x_treated, _ = self.embed_layer_treated(x[:, 1].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input['treated'])
+        x_diseased, _ = self.embed_layer_diseased(x[:, 0].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input["diseased"])
+        x_treated, _ = self.embed_layer_treated(x[:, 1].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input["treated"])
 
         x_j_mask = None
         if self._mutilate_graph:
