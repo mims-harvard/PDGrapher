@@ -21,14 +21,7 @@ def main():
         log_train=False, log_test=False
     )
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--fold", "-f", default=0, type=int, dest="fold_idx")
-    args = parser.parse_args()
-
-    #train_metrics = trainer.train_kfold(model, dataset, 50)
-    dataset.prepare_fold(args.fold_idx)
-    trainer.logging_paths(name=f"fold_{args.fold_idx}")
-    train_metrics = trainer.train(model, dataset, 50)
+    train_metrics = trainer.train_kfold(model, dataset, 50)
 
     print(train_metrics)
 

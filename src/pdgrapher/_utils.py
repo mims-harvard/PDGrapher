@@ -141,8 +141,9 @@ class EarlyStopping:
 
     def _load_model(self) -> nn.Module:
         checkpoint = torch.load(self.save_path)
-        self.model.module.load_state_dict(checkpoint["model_state_dict"])
-        return self.model.module
+        tmp_model = deepcopy(self.model.module)
+        tmp_model.load_state_dict(checkpoint["model_state_dict"])
+        return tmp_model
 
     def reset(self):
         self.counter = 0

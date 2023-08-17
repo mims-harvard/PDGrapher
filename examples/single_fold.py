@@ -12,7 +12,9 @@ def main():
     model = PDGrapher(edge_index, model_args={"n_layers_nn": 1, "n_layers_gnn": 2})
     trainer = Trainer(
         fabric_kwargs={"accelerator": "cuda"},
-        log=True, use_forward_data=True, use_backward_data=True, supervision_multiplier=0.01
+        log=True, use_forward_data=True, use_backward_data=True, use_supervision=True,
+        use_intervention_data=True, supervision_multiplier=0.01,
+        log_train=True, log_test=True
     )
 
     train_metrics = trainer.train(model, dataset, 50)

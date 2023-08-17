@@ -3,7 +3,14 @@ import random
 import sys
 import unittest
 
-from torch import Tensor
+from lightning.fabric import Fabric
+import numpy as np
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+from torch.utils.data import DataLoader, TensorDataset
 
 from pdgrapher._utils import (
     _test_condition,
@@ -95,7 +102,7 @@ class TestGetThresholds(unittest.TestCase):
 
         class Dataset1:
             def __init__(self, N):
-                self._data = Tensor([random.randint(0, 5) for _ in range(N)])
+                self._data = torch.tensor([random.randint(0, 5) for _ in range(N)])
             def cpu(self):
                 return self._data
         class Dataset2:
@@ -216,7 +223,57 @@ class TestTicToc(unittest.TestCase):
 
 
 class TestEarlyStopping(unittest.TestCase):
-    pass
+
+    def test_saving_loading(self):
+        test_model = nn.Sequential(nn.Linear(10, 5), nn.ReLU(), nn.Linear(5, 1))
+        optimizer = optim.SGD(test_model.parameters(), lr=1e-3)
+        fabric = Fabric(accelerator="cpu")
+        fabric_model, fabric_optimizer = fabric.setup(test_model, optimizer)
+
+        criterion = nn.MSELoss()
+
+        es = EarlyStopping(model=fabric_model, save_path="tests/PDGrapher_test/test_model.pt")
+        es(10) # initial save of the model
+        tmp_model = es.load_model() # check if model is the same
+        self.assertListEqual(list(test_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        self.assertListEqual(list(fabric_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        for key, val in test_model.state_dict().items():
+            val_2 = tmp_model.state_dict()[key]
+            if not torch.equal(val, val_2):
+                raise AssertionError()
+
+        x = np.random.rand(200, 10).astype("float32")
+        y = (x[:, 2] + 2*x[:, 3] + (x[:, 5] - x[:, 7])**2 + 5).reshape(200, 1)
+
+        dataloader = DataLoader(TensorDataset(torch.tensor(x), torch.tensor(y)), batch_size=10)
+        fabric_dataloader = fabric.setup_dataloaders(dataloader)
+
+        for _ in range(10): # train for 10 epochs
+            for x, y in fabric_dataloader:
+                fabric_optimizer.zero_grad()
+                out = fabric_model(x)
+                loss = criterion(out, y)
+                fabric.backward(loss)
+                fabric_optimizer.step()
+
+        # check if the model has changed
+        tmp_model = es.load_model()
+        self.assertListEqual(list(test_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        self.assertListEqual(list(fabric_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        for key, val in test_model.state_dict().items():
+            val_2 = tmp_model.state_dict()[key]
+            if torch.equal(val, val_2):
+                raise AssertionError()
+
+        # check if the model is saved
+        es(1)
+        tmp_model = es.load_model()
+        self.assertListEqual(list(test_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        self.assertListEqual(list(fabric_model.state_dict().keys()), list(tmp_model.state_dict().keys()))
+        for key, val in test_model.state_dict().items():
+            val_2 = tmp_model.state_dict()[key]
+            if not torch.equal(val, val_2):
+                raise AssertionError()
 
 
 class TestDummyWriter(unittest.TestCase):
