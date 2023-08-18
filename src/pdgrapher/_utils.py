@@ -85,9 +85,9 @@ def get_threshold_treated(dataset):
 
 
 def _get_thresholds(dataset, kind: str):
-    _test_condition(kind in {"healthy", "diseased", "treated"}, "`kind` should be one of (diseased, treated, intervention)")
+    _test_condition(kind in {"healthy", "diseased", "treated"}, "`kind` should be one of (diseased, treated, healthy)")
     all_values = [getattr(data, kind).cpu() for data in dataset]
-    percentiles = torch.Tensor(np.percentile(torch.stack(all_values).flatten(), [e for e in np.arange(0, 100, 0.2)] + [100]))
+    percentiles = torch.tensor(np.percentile(torch.stack(all_values).flatten(), [e for e in np.arange(0, 100, 0.2)] + [100]))
     return percentiles
 
 
@@ -97,22 +97,6 @@ def get_thresholds(dataset):
         'diseased': _get_thresholds(dataset.train_dataset_backward, "diseased"),
         'treated': _get_thresholds(dataset.train_dataset_backward, "treated")
     }
-
-
-def save_best_model(model, file, outdir, optimizer, scheduler, epoch):
-    torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler_state_dict': scheduler.state_dict(),
-        },
-        os.path.join(outdir, file))
-
-
-def load_best_model(model, file, outdir):
-    checkpoint = torch.load(os.path.join(outdir, file))
-    model.load_state_dict(checkpoint['model_state_dict'])
-    return model
 
 
 class EarlyStopping:
