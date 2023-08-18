@@ -227,6 +227,9 @@ class Trainer:
             model_1.eval()
             model_2.train()
             if self.use_intervention_data:
+                # Freezing response prediction model
+                for param in model_1.parameters():
+                    param.requires_grad = False
                 for data in train_loader_backward:
                     self._op2_zero_grad() # optimizer_2.zero_grad()
                     pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
@@ -242,6 +245,9 @@ class Trainer:
                     # if self.use_lr_scheduler: scheduler_2.step()
                     self._sc2_step()
                     l_intervention += float(loss_backward)
+                # Unfreezing response prediction model
+                for param in model_1.parameters():
+                    param.requires_grad = True
                 noptims_intervention += len(train_loader_backward)
             elif self.use_supervision:
                 for data in train_loader_backward:
