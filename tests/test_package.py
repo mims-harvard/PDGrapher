@@ -8,11 +8,12 @@ from pdgrapher import PDGrapher, Dataset, Trainer
 
 
 def clean_folder_before_test():
+    print("Cleaning previous test...")
     for file in os.listdir("tests/PDGrapher_test"):
         if file == ".keep":
             continue
         if os.path.isfile(file):
-            os.unlink(file)
+            os.remove(file)
 
 
 class TestPackage(unittest.TestCase):

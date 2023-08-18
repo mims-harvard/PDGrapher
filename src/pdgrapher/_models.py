@@ -41,6 +41,7 @@ class GCNBase(nn.Module):
         super().__init__()
 
         self.edge_index = edge_index
+        self.positional_features_dims = args.positional_features_dims
 
         # Conv layers
         self.convs = nn.ModuleList()
