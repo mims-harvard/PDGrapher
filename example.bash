@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -c 1
-#SBATCH -t 0-12:00
+#SBATCH -t 1-00:00
 #SBATCH -p gpu
-#SBATCH --mem=24G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH -o examples/%j.out
 #SBATCH -e examples/%j.err
