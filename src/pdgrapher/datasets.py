@@ -3,7 +3,7 @@ from typing import List
 import torch
 from torch_geometric.loader import DataLoader
 
-from pdgrapher._utils import _test_condition
+from ._utils import _test_condition
 
 
 __all__ = ["Dataset"]

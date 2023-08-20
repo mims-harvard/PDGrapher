@@ -2,6 +2,7 @@ from copy import deepcopy
 from os import makedirs, path as osp
 from time import perf_counter
 from typing import Dict, Tuple, Any
+import warnings
 
 from lightning import Fabric
 from lightning.fabric.wrappers import _FabricModule
@@ -12,9 +13,9 @@ import torch
 from torch.nn.functional import mse_loss, binary_cross_entropy_with_logits
 # from torch.utils.tensorboard import SummaryWriter
 
-from pdgrapher.datasets import Dataset
-from pdgrapher.pdgrapher import PDGrapher
-from pdgrapher._utils import get_thresholds, calculate_loss_sample_weights, DummyWriter, EarlyStopping
+from .datasets import Dataset
+from .pdgrapher import PDGrapher
+from ._utils import get_thresholds, calculate_loss_sample_weights, DummyWriter, EarlyStopping
 
 
 class Trainer:
@@ -35,6 +36,9 @@ class Trainer:
         self.use_supervision = kwargs.pop("use_supervision", False)
         self.supervision_multiplier = kwargs.pop("supervision_multiplier", 1)
         self.use_lr_scheduler = kwargs.pop("use_lr_scheduler", False)
+
+        if len(kwargs):
+            warnings.warn(f"Unknown kwargs: {list(kwargs.keys())}")
 
         # Fabric setup
         self.fabric = Fabric(**fabric_kwargs)
@@ -144,10 +148,10 @@ class Trainer:
 
             # Log epoch summary
             summary = f"Epoch: {epoch:03d}, {end-start:.2f} seconds, Loss: {loss:.4f}"
-            summary += summ_train + summ_test + "\n"
+            summary += summ_train + summ_test
             print(summary)
             if self.use_logging:
-                log_metrics.write(summary)
+                log_metrics.write(summary + "\n")
 
             # Early stopping
             if not es_1.is_stopped and es_1(val_loss_f):

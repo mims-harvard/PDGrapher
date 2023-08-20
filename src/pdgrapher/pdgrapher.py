@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
-from pdgrapher._models import GCNArgs, ResponsePredictionModel, PerturbationDiscoveryModel
-from pdgrapher._utils import _test_condition
+from ._models import GCNArgs, ResponsePredictionModel, PerturbationDiscoveryModel
+from ._utils import _test_condition
 
 __all__ = ["PDGrapher"]
 

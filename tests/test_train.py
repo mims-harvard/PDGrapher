@@ -20,6 +20,11 @@ class TestTrainer(unittest.TestCase):
         
         self.assertEqual(trainer.fabric.device.type, "cpu")
 
+    def test_trainer_unknown_kwargs(self):
+        with self.assertWarns(Warning):
+            trainer = Trainer(
+                unknown_arg=1, another_unknown=True
+            )
 
 if __name__ == "__main__":
     unittest.TestLoader.sortTestMethodsUsing = None

@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from pdgrapher._embed import EmbedLayer
-from pdgrapher._torch_geometric import GCNConv
+from ._embed import EmbedLayer
+from ._torch_geometric import GCNConv
 
 __all__ = ["GCNArgs", "ResponsePredictionModel", "PerturbationDiscoveryModel"]
 
