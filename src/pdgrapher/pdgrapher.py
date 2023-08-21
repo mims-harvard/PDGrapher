@@ -18,10 +18,9 @@ class PDGrapher:
     """
 
     def __init__(self, edge_index: torch.Tensor, *, model_kwargs: Dict[str, Any] = {},
-                 response_kwargs: Dict[str, Any] = {}, perturbation_kwargs: Dict[str, Any] = {},
-                 **kwargs: Dict[str, Any]) -> None:
+                 response_kwargs: Dict[str, Any] = {}, perturbation_kwargs: Dict[str, Any] = {}) -> None:
         """
-        Initialization for PDGrapher. Handles ...
+        Initialization for PDGrapher.
 
         Args:
             edge_index (torch.Tensor): _description_
@@ -72,11 +71,8 @@ class PDGrapher:
             self.__optimizer_perturbation_discovery, step_size=1500, gamma=0.1)
 
 
-    def forward(self, xh, xd) -> Any:
-        # TODO add correct parameters
-        u = self.perturbation_discovery(xh, xd)
-        xt = self.response_prediction(xd, u)
-        return u, xt
+    def forward(self, *args, **kwargs) -> Any:
+        raise NotImplementedError()
 
 
     def get_optimizers_and_schedulers(self) -> Tuple[

@@ -164,6 +164,14 @@ class Trainer:
         if self.use_logging:
             log_metrics.close()
 
+        # Restore best models
+        if model._train_response_prediction:
+            model.response_prediction = es_1.load_model()
+            modeL_1 = self.fabric.setup(model.response_prediction)
+        if model._train_perturbation_discovery:
+            model.perturbation_discovery = es_2.load_model()
+            modeL_2 = self.fabric.setup(model.perturbation_discovery)
+
         # Enable testing of the models
         es_1.is_stopped = False
         es_2.is_stopped = False
@@ -174,12 +182,6 @@ class Trainer:
             "train": train_perf,
             "test": test_perf
         }
-
-        # Restore best models
-        if model._train_response_prediction:
-            model.response_prediction = es_1.load_model()
-        if model._train_perturbation_discovery:
-            model.perturbation_discovery = es_2.load_model()
 
         return model_performance
 
@@ -333,20 +335,15 @@ class Trainer:
         if not es_1.is_stopped:
             real_y = []
             score_y = []
-            #inputs = []
             if self.use_forward_data:
                 for data in loader_forward:
-                    _in = torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1)
-                    out, _ = model_1(_in, data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
-                    #inputs.append(_in.cpu().numpy())
+                    out, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
                     real_y += data.diseased.detach().cpu().tolist()
                     score_y += out[:, -1].detach().cpu().tolist()
 
             if self.use_backward_data:
                 for data in loader_backward:
-                    _in = torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1)
-                    out, _ = model_1(_in, data.batch, mutilate_mutations=data.mutations, binarize_intervention=False, threshold_input=thresholds["diseased"])
-                    #inputs.append(_in.cpu().numpy())
+                    out, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, binarize_intervention=False, threshold_input=thresholds["diseased"])
                     real_y += data.treated.detach().cpu().tolist()
                     score_y += out[:, -1].detach().cpu().tolist()
 
@@ -380,7 +377,6 @@ class Trainer:
         if not es_2.is_stopped:
             real_y = []
             score_y = []
-            #inputs = []
             top_ks = []
             perturbagens = []
 
@@ -389,7 +385,6 @@ class Trainer:
                 num_nodes = int(data.num_nodes / len(torch.unique(data.batch)))
                 # predicting interventions
                 out = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
-                #inputs.append(torch.concat([data.diseased.view(-1, 1), out], 1).cpu().numpy())
 
                 # measure accuracy predicted U'
                 where_intervention = torch.where(data.intervention.detach().cpu().view(-1, num_nodes))

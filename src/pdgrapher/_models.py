@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Dict
 
 import torch
@@ -33,6 +33,9 @@ class GCNArgs():
         instance.n_layers_gnn = args.get("n_layers_gnn", 1)
         instance.n_layers_nn = args.get("n_layers_nn", 2)
         return instance
+
+    def to_dict(self) -> Dict[str, int]:
+        return asdict(self)
 
 
 class GCNBase(nn.Module):

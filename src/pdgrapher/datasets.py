@@ -54,6 +54,9 @@ class Dataset:
         self.val_dataset_backward = [self.dataset_backward[i] for i in self.val_index_backward]
         self.test_dataset_backward = [self.dataset_backward[i] for i in self.test_index_backward]
 
+    def get_num_vars(self) -> int:
+        return self.dataset_forward[0].num_nodes
+
     def _test_indices(self, fold_splits):
         set_trif = set(fold_splits["train_index_forward"])
         set_trib = set(fold_splits["train_index_backward"])
