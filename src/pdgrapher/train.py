@@ -20,7 +20,7 @@ from ._utils import get_thresholds, calculate_loss_sample_weights, DummyWriter, 
 
 class Trainer:
 
-    def __init__(self, fabric_kwargs: Dict[str, Any] = {}, **kwargs):
+    def __init__(self, fabric_kwargs: Dict[str, Any] = {}, **kwargs) -> None:
         # Logger
         self.use_logging = kwargs.pop("log", False)
         self.logging_dir = osp.abspath(kwargs.pop("logging_dir", "examples/PDGrapher")) # default PDGrapher
@@ -51,7 +51,7 @@ class Trainer:
         self._sc1_step = lambda: None
         self._sc2_step = lambda: None
 
-    def logging_paths(self, *, path: str = None, name: str = None):
+    def logging_paths(self, *, path: str = None, name: str = None) -> None:
         if path:
             self.logging_dir = osp.abspath(path)
         if name:
@@ -59,7 +59,7 @@ class Trainer:
             if not name.endswith("_"):
                 self.logging_name += "_"
 
-    def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
+    def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}) -> Dict[str, Dict[str, float]]:
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
         sample_weights_model_2_backward = self.fabric.to_device(sample_weights_model_2_backward)
@@ -106,15 +106,15 @@ class Trainer:
                 model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward,
                 thresholds, pos_weight)
             toc = perf_counter()
-            print(f"Train call: {toc-tic:.2f}secs")
+            print(f"Train call: {toc-tic:.2f}s")
 
             # VALIDATION
             tic = perf_counter()
-            val_loss_f, val_loss_b = self._val_one_pass(
+            val_loss, val_loss_f, val_loss_b = self._val_one_pass(
                 model_1, model_2, es_1, es_2, val_loader_forward, val_loader_backward,
                 thresholds, pos_weight)
             toc = perf_counter()
-            print(f"Validation call: {toc-tic:.2f}secs")
+            print(f"Validation call: {toc-tic:.2f}s")
 
             # Log additional metrics
             summ_train = ""
@@ -123,7 +123,7 @@ class Trainer:
                 train_performance = self._test_one_pass(
                     model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward, thresholds)
                 toc = perf_counter()
-                print(f"Test call (train dataset): {toc-tic:.2f}secs")
+                print(f"Test call (train dataset): {toc-tic:.2f}s")
                 summ_train = self._test_to_str(train_performance, "TRAIN")
                 self._test_to_writer(train_performance, "train", epoch)
 
@@ -133,7 +133,7 @@ class Trainer:
                 test_performance = self._test_one_pass(
                     model_1, model_2, es_1, es_2, test_loader_forward, test_loader_backward, thresholds)
                 toc = perf_counter()
-                print(f"Test call (test dataset): {toc-tic:.2f}secs")
+                print(f"Test call (test dataset): {toc-tic:.2f}s")
                 summ_test = self._test_to_str(test_performance, "TEST")
                 self._test_to_writer(test_performance, "test", epoch)
 
@@ -147,7 +147,11 @@ class Trainer:
             end = perf_counter()
 
             # Log epoch summary
-            summary = f"Epoch: {epoch:03d}, {end-start:.2f} seconds, Loss: {loss:.4f}"
+            summary = (
+                f"Epoch {epoch:03d} [{end-start:.2f}s],"
+                f"Train loss: {loss:.4f} (forward: {loss_f:.4f}, backward: {loss_b:.4f}),"
+                f"Val loss: {val_loss:.4f} (forward: {val_loss_f:.4f}, backward: {val_loss_b:.4f})"
+            )
             summary += summ_train + summ_test
             print(summary)
             if self.use_logging:
@@ -167,10 +171,10 @@ class Trainer:
         # Restore best models
         if model._train_response_prediction:
             model.response_prediction = es_1.load_model()
-            modeL_1 = self.fabric.setup(model.response_prediction)
+            model_1 = self.fabric.setup(model.response_prediction)
         if model._train_perturbation_discovery:
             model.perturbation_discovery = es_2.load_model()
-            modeL_2 = self.fabric.setup(model.perturbation_discovery)
+            model_2 = self.fabric.setup(model.perturbation_discovery)
 
         # Enable testing of the models
         es_1.is_stopped = False
@@ -187,17 +191,20 @@ class Trainer:
 
     def train_kfold(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         model_performances = list()
+        _prev_name = self.logging_name
 
         for fold_idx in range(dataset.num_of_folds):
             dataset.prepare_fold(fold_idx)
-            self.logging_paths(name=f"fold_{fold_idx}")
+            self.logging_paths(name=f"{_prev_name}_fold_{fold_idx}_")
             model_tmp = deepcopy(model)
             model_performance = self.train(model_tmp, dataset, n_epochs, early_stopping_kwargs)
             model_performances.append(model_performance)
 
+        self.logging_paths(name=_prev_name)
+
         return model_performances
 
-    def _train_one_pass(self, model_1, model_2, es_1, es_2, train_loader_forward, train_loader_backward,
+    def _train_one_pass(self, model_1, model_2, es_1, es_2, loader_forward, loader_backward,
                         thresholds, pos_weight) -> Tuple[float, float, float]:
         l_response = 0
         l_intervention = 0
@@ -208,7 +215,7 @@ class Trainer:
         if not es_1.is_stopped:
             model_1.train()
             if self.use_forward_data:
-                for data in train_loader_forward:
+                for data in loader_forward:
                     self._op1_zero_grad()
                     output_forward, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
                     loss_forward = mse_loss(output_forward.view(-1), data.diseased)
@@ -216,9 +223,9 @@ class Trainer:
                     self._op1_step()
                     self._sc1_step()
                     l_response += float(loss_forward)
-                noptims_response += len(train_loader_forward)
+                noptims_response += len(loader_forward)
             if self.use_backward_data:
-                for data in train_loader_backward:
+                for data in loader_backward:
                     self._op1_zero_grad()
                     output_forward, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, binarize_intervention=False, mutilate_mutations=data.mutations, threshold_input=thresholds["diseased"])
                     loss_forward = mse_loss(output_forward.view(-1), data.treated)
@@ -226,14 +233,14 @@ class Trainer:
                     self._op1_step()
                     self._sc1_step()
                     l_response += float(loss_forward)
-                noptims_response += len(train_loader_backward)
+                noptims_response += len(loader_backward)
 
         # Do we train the perturbagen discovery model?
         if not es_2.is_stopped:
             model_1.eval()
             model_2.train()
             if self.use_intervention_data:
-                for data in train_loader_backward:
+                for data in loader_backward:
                     self._op2_zero_grad()
                     pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
                     # prior knowledge: number of perturbations (targets) per drug
@@ -251,9 +258,9 @@ class Trainer:
                     # Unfreezing response prediction model
                     self._unfreeze_model(model_1)
                     l_intervention += float(loss_backward)
-                noptims_intervention += len(train_loader_backward)
+                noptims_intervention += len(loader_backward)
             elif self.use_supervision:
-                for data in train_loader_backward:
+                for data in loader_backward:
                     # Backward
                     self._op2_zero_grad()
                     pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
@@ -262,7 +269,7 @@ class Trainer:
                     self._op2_step()
                     self._sc2_step()
                     l_intervention += float(loss_backward)
-                noptims_intervention += len(train_loader_backward)
+                noptims_intervention += len(loader_backward)
 
         total_loss = l_response + l_intervention
         total_noptims = noptims_response + noptims_intervention
@@ -274,8 +281,8 @@ class Trainer:
         )
 
     @torch.no_grad()
-    def _val_one_pass(self, model_1, model_2, es_1, es_2, val_loader_forward,
-                      val_loader_backward, thresholds, pos_weight) -> Tuple[float, float]:
+    def _val_one_pass(self, model_1, model_2, es_1, es_2, loader_forward,
+                      loader_backward, thresholds, pos_weight) -> Tuple[float, float]:
         l_response = 0
         l_intervention = 0
         noptims_response = 0
@@ -286,23 +293,23 @@ class Trainer:
 
         if not es_1.is_stopped:
             if self.use_forward_data:
-                for data in val_loader_forward:
+                for data in loader_forward:
                     # Forward
                     # regression loss - learns diseased from healthy and mutations
                     output_forward, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
                     loss_forward = mse_loss(output_forward.view(-1), data.diseased)
                     l_response += float(loss_forward)
-                noptims_response += len(val_loader_forward)
+                noptims_response += len(loader_forward)
             if self.use_backward_data:
-                for data in val_loader_backward:
+                for data in loader_backward:
                     out, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, binarize_intervention=False, threshold_input=thresholds["diseased"])
                     loss_forward = mse_loss(out.view(-1), data.treated)
                     l_response += float(loss_forward)
-                noptims_response += len(val_loader_backward)
+                noptims_response += len(loader_backward)
 
         if not es_2.is_stopped:
             if self.use_intervention_data:
-                for data in val_loader_backward:
+                for data in loader_backward:
                     # Backward
                     # (1), (2) cycle loss with M_1 frozen
                     pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
@@ -313,22 +320,26 @@ class Trainer:
                     if self.use_supervision:
                         loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
                     l_intervention += float(loss_backward)
-                noptims_intervention += len(val_loader_backward)
+                noptims_intervention += len(loader_backward)
             # supervision for U'
             elif self.use_supervision:
-                for data in val_loader_backward:
+                for data in loader_backward:
                     pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
                     loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
                     l_intervention += float(loss_backward)
-                noptims_intervention += len(val_loader_backward)
+                noptims_intervention += len(loader_backward)
+
+        total_loss = l_response + l_intervention
+        total_noptims = noptims_response + noptims_intervention
 
         return (
+            total_loss/total_noptims if total_noptims else total_loss,
             l_response/noptims_response if noptims_response else l_response,
             l_intervention/noptims_intervention if noptims_intervention else l_intervention
         )
 
     @torch.no_grad()
-    def _test_one_pass(self, model_1, model_2, es_1, es_2, loader_forward, loader_backward, thresholds):
+    def _test_one_pass(self, model_1, model_2, es_1, es_2, loader_forward, loader_backward, thresholds) -> Dict[str, float]:
         model_1.eval()
         model_2.eval()
 
@@ -389,9 +400,9 @@ class Trainer:
                 # measure accuracy predicted U'
                 where_intervention = torch.where(data.intervention.detach().cpu().view(-1, num_nodes))
                 correct_interventions = tuple(zip(where_intervention[0].tolist(), where_intervention[1].tolist()))
-
+                prepare_out = out.detach().cpu().view(-1, num_nodes)
                 for (row, col) in correct_interventions:
-                    top_ks.append(torch.where(torch.argsort(out.detach().cpu().view(-1, num_nodes)[row, :], descending=True) == col)[0].item())
+                    top_ks.append(torch.where(torch.argsort(prepare_out[row, :], descending=True) == col)[0].item())
 
                 # response prediction
                 topK = torch.sum(data.intervention.view(-1, int(data.num_nodes / len(torch.unique(data.batch)))), 1)
@@ -486,25 +497,25 @@ class Trainer:
             self._sc2_step = lambda: None
 
         return model_1, model_2
-    
+
     def _freeze_model(self, model) -> None:
         for param in model.parameters():
             param.requires_grad = False
-    
+
     def _unfreeze_model(self, model) -> None:
         for param in model.parameters():
             param.requires_grad = True
 
     def _test_to_str(self, perf: Dict[str, float], kind: str) -> str:
         return (
-            f", {kind} - FORWARD: MSE: {perf['forward_mse']:.4f}, MAE: {perf['forward_mae']:.4f}, "
+            f" | {kind} - FORWARD: MSE: {perf['forward_mse']:.4f}, MAE: {perf['forward_mae']:.4f}, "
             f"R2: {perf['forward_r2']:.4f}, R2 scgen: {perf['forward_r2_scgen']:.4f}, "
-            f"Spearman: {perf['forward_spearman']:.4f}, {kind} - BACKWARD: MSE: {perf['backward_mse']:.4f}, "
+            f"Spearman: {perf['forward_spearman']:.4f} | {kind} - BACKWARD: MSE: {perf['backward_mse']:.4f}, "
             f"MAE: {perf['backward_mae']:.4f}, R2: {perf['backward_r2']:.4f}, "
             f"R2 scgen: {perf['backward_r2_scgen']:.4f}, Spearman: {perf['backward_spearman']:.4f}, TopK: {perf['backward_avg_topk']:.4f}"
         )
 
-    def _test_to_writer(self, perf: Dict[str, float], kind: str, epoch) -> None:
+    def _test_to_writer(self, perf: Dict[str, float], kind: str, epoch: int) -> None:
         for k, v in perf.items():
             pre, suf = k.split("_", 1)
             self.writer.add_scalar(f"{pre}/{kind}/{suf}", v, epoch)

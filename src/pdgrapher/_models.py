@@ -87,10 +87,8 @@ class GCNBase(nn.Module):
 
         self._mutilate_graph = True
 
-
     def forward(self, x):
         raise NotImplementedError()
-
 
     def mutilate_graph(self, batch, uprime=0, mutilate_mutations=None):
         if mutilate_mutations is not None:
@@ -109,7 +107,6 @@ class GCNBase(nn.Module):
         x_j_mask = torch.cat(x_j_mask)
         return x_j_mask
 
-
     def from_node_to_out(self, x1, x2, batch, random_dims, x_j_mask=None):
         # Initial node embedding
         x = torch.cat([x1, x2, random_dims], 1)
@@ -127,7 +124,6 @@ class GCNBase(nn.Module):
             x = self.bns_mlp[-1](F.elu(self.mlp[-2](x)))
 
         return x
-
 
     def build_dictionary_node_to_edge_index_position(self):
         # dictionary storing, for each node, its place in edge_index where

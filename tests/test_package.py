@@ -50,7 +50,7 @@ class TestPackage(unittest.TestCase):
         ]:
             self.assertIn(key, model_performance["train"])
             self.assertIn(key, model_performance["test"])
-        
+
         # Check if all files exist
         self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/params.txt")))
         self.assertTrue(os.path.isfile(os.path.abspath("tests/PDGrapher_test/metrics.txt")))

@@ -16,8 +16,8 @@ class TestPDGrapher(unittest.TestCase):
 
     def test_pdgrapher_args(self):
         model = PDGrapher(
-            self.edge_index, response_args={"n_layers_gnn": 3, "n_layers_nn": 9, "train": False},
-            perturbation_args={"n_layers_gnn": 7, "n_layers_nn": 4, "train": True})
+            self.edge_index, response_kwargs={"n_layers_gnn": 3, "n_layers_nn": 9, "train": False},
+            perturbation_kwargs={"n_layers_gnn": 7, "n_layers_nn": 4, "train": True})
 
         # test response_args
         self.assertEqual(len(model.response_prediction.convs), 3)
@@ -96,7 +96,7 @@ class TestPDGrapher(unittest.TestCase):
         o21 = optim.SGD(m2.parameters(), 1)
         o22 = optim.SGD(m1.parameters(), 1) # for m1
 
-        #model.set_optimizers_and_schedulers([[o11, o12], o21])
+        # model.set_optimizers_and_schedulers([[o11, o12], o21])
         with self.assertRaises(ValueError):
             model.set_optimizers_and_schedulers([[o11, o12], o22])
         with self.assertRaises(ValueError):

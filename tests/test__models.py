@@ -34,7 +34,7 @@ class TestGCNArgs(unittest.TestCase):
         self.assertDictEqual(obj.to_dict(), gcnargs_dict)
 
 
-""" class TestGCNBase(unittest.TestCase):
+class TestGCNBase(unittest.TestCase):
 
     edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
 
@@ -43,7 +43,7 @@ class TestGCNArgs(unittest.TestCase):
         gcnbase = GCNBase(gcnargs, "response", self.edge_index)
         with self.assertRaises(NotImplementedError):
             gcnbase.forward(None)
-    
+
     def test_some_args(self):
         gcnargs = GCNArgs(n_layers_gnn=4, n_layers_nn=4)
         gcnbase = GCNBase(gcnargs, "response", self.edge_index)
@@ -52,7 +52,7 @@ class TestGCNArgs(unittest.TestCase):
         for i in range(100):
             x = random.randint(0, 100)
             self.assertEqual(gcnbase.out_fun(x), x)
-        
+
         # test number of GNN layers
         self.assertEqual(len(gcnbase.convs), 4)
         # test number of NN layers
@@ -66,7 +66,7 @@ class TestResponsePredictionModel(unittest.TestCase):
     def test_empty_args(self):
         gcnargs = GCNArgs()
         model = ResponsePredictionModel(gcnargs, self.edge_index)
-    
+
     def test_some_args(self):
         gcnargs = GCNArgs(n_layers_gnn=2, n_layers_nn=2)
         model = ResponsePredictionModel(gcnargs, self.edge_index)
@@ -75,7 +75,7 @@ class TestResponsePredictionModel(unittest.TestCase):
         for i in range(100):
             x = random.randint(0, 100)
             self.assertEqual(model.out_fun(x), x)
-        
+
         # test number of GNN layers
         self.assertEqual(len(model.convs), 2)
         # test number of NN layers
@@ -89,7 +89,7 @@ class TestPerturbationDiscoveryModel(unittest.TestCase):
     def test_empty_args(self):
         gcnargs = GCNArgs()
         model = PerturbationDiscoveryModel(gcnargs, self.edge_index)
-    
+
     def test_some_args(self):
         gcnargs = GCNArgs(n_layers_gnn=2, n_layers_nn=2)
         model = PerturbationDiscoveryModel(gcnargs, self.edge_index)
@@ -98,12 +98,12 @@ class TestPerturbationDiscoveryModel(unittest.TestCase):
         for i in range(100):
             x = random.randint(0, 100)
             self.assertEqual(model.out_fun(x), x)
-        
+
         # test number of GNN layers
         self.assertEqual(len(model.convs), 2)
         # test number of NN layers
         self.assertEqual(len(model.mlp), 1+2+1) # input + specified + output layers
- """
+
 
 if __name__ == "__main__":
     unittest.TestLoader.sortTestMethodsUsing = None
