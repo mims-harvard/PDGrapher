@@ -148,8 +148,8 @@ class Trainer:
 
             # Log epoch summary
             summary = (
-                f"Epoch {epoch:03d} [{end-start:.2f}s],"
-                f"Train loss: {loss:.4f} (forward: {loss_f:.4f}, backward: {loss_b:.4f}),"
+                f"Epoch {epoch:03d} [{end-start:.2f}s], "
+                f"Train loss: {loss:.4f} (forward: {loss_f:.4f}, backward: {loss_b:.4f}), "
                 f"Val loss: {val_loss:.4f} (forward: {val_loss_f:.4f}, backward: {val_loss_b:.4f})"
             )
             summary += summ_train + summ_test
@@ -164,6 +164,8 @@ class Trainer:
                 print("Early stopping model 2 (intervention discovery)")
             if es_1.is_stopped and es_2.is_stopped:
                 break
+
+            print()
 
         if self.use_logging:
             log_metrics.close()

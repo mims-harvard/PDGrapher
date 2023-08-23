@@ -28,9 +28,9 @@ def main():
 
     model_performance = trainer.train(model, dataset, 50)
 
-    with open(f"examples/PDGrapher/fold_{args.fold}_final.txt", "w") as f:
-        f.write(model_performance)
     print(model_performance)
+    with open(f"examples/PDGrapher/fold_{args.fold}_final.txt", "w") as f:
+        f.write(str(model_performance))
 
 
 if __name__ == "__main__":

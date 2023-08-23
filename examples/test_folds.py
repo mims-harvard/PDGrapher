@@ -12,11 +12,12 @@ def main():
     )
 
     edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
-    model = PDGrapher(edge_index, model_args={"n_layers_nn": 1, "n_layers_gnn": 1})
+    model = PDGrapher(edge_index, model_args={"n_layers_nn": 1, "n_layers_gnn": 1, "num_vars": dataset.get_num_vars()},
+                      response_kwargs={"train": False}, perturbation_kwargs={"train": False})
 
     trainer = Trainer(
         fabric_kwargs={"accelerator": "cuda"},
-        log=True, use_forward_data=True, use_backward_data=True, use_supervision=True,
+        log=False, use_forward_data=True, use_backward_data=True, use_supervision=True,
         use_intervention_data=True, supervision_multiplier=0.01,
         log_train=False, log_test=False
     )
@@ -30,10 +31,13 @@ def main():
         save_path = f"examples/PDGrapher/fold_{fold}_perturbation_discovery.pt"
         checkpoint = torch.load(save_path)
         model.perturbation_discovery.load_state_dict(checkpoint["model_state_dict"])
+        
         dataset.prepare_fold(fold)
         trainer.logging_paths(name=f"fold_{fold}_")
-        train_metrics = trainer.train(model, dataset, -1) # no training
-        print(train_metrics)
+        model_performance = trainer.train(model, dataset, -1) # no training
+        print(model_performance)
+        with open(f"examples/PDGrapher/fold_{fold}_final.txt", "w") as f:
+            f.write(str(model_performance))
 
 
 if __name__ == "__main__":
