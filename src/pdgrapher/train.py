@@ -448,16 +448,16 @@ class Trainer:
             avg_topk = -1
 
         return {
-            'forward_spearman': forward_spearman,
             'forward_mae': forward_mae,
             'forward_mse': forward_mse,
             'forward_r2': forward_r2,
             'forward_r2_scgen': forward_r2_value,
-            'backward_spearman': backward_spearman,
+            'forward_spearman': forward_spearman,
             'backward_mae': backward_mae,
             'backward_mse': backward_mse,
             'backward_r2': backward_r2,
             'backward_r2_scgen': backward_r2_value,
+            'backward_spearman': backward_spearman,
             'backward_avg_topk': avg_topk
         }
 
