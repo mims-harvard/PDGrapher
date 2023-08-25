@@ -1,10 +1,13 @@
-import argparse
-
+import numpy as np
 import torch
 
 from pdgrapher import Dataset, PDGrapher, Trainer
 
 def main():
+    torch.set_num_threads(4)
+    torch.manual_seed(0)
+    np.random.seed(0)
+
     dataset = Dataset(
         forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
         backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
@@ -21,9 +24,11 @@ def main():
         log_train=False, log_test=False
     )
 
-    train_metrics = trainer.train_kfold(model, dataset, 50)
+    model_performances = trainer.train_kfold(model, dataset, 50)
 
-    print(train_metrics)
+    print(model_performances)
+    with open(f"examples/PDGrapher/multifold_final.txt", "w") as f:
+        f.write(str(model_performances))
 
 
 if __name__ == "__main__":
