@@ -23,20 +23,20 @@ def main():
     )
     trainer.logging_paths(name=f"tmp_")
 
-    for fold in range(dataset.num_of_folds):
+    for fold in range(dataset.num_of_folds-1):
         # restore Response prediction
-        save_path = f"examples/PDGrapher/fold_{fold}_response_prediction.pt"
+        save_path = f"examples/PDGrapher/_fold_{fold}_response_prediction.pt"
         checkpoint = torch.load(save_path)
         model.response_prediction.load_state_dict(checkpoint["model_state_dict"])
         # restore Perturbation discovery
-        save_path = f"examples/PDGrapher/fold_{fold}_perturbation_discovery.pt"
+        save_path = f"examples/PDGrapher/_fold_{fold}_perturbation_discovery.pt"
         checkpoint = torch.load(save_path)
         model.perturbation_discovery.load_state_dict(checkpoint["model_state_dict"])
 
         dataset.prepare_fold(fold)
         model_performance = trainer.train(model, dataset, -1) # no training
         print(model_performance)
-        with open(f"examples/PDGrapher/fold_{fold}_final.txt", "w") as f:
+        with open(f"examples/PDGrapher/_fold_{fold}_final.txt", "w") as f:
             f.write(str(model_performance))
 
 
