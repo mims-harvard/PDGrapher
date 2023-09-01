@@ -155,6 +155,19 @@ class EarlyStopping:
         return False
 
 
+class DummyEarlyStopping(EarlyStopping):
+
+    def __init__(self, patience: int = 15, skip: int = 0, minmax: str = "min", rope: float = 1e-5,
+                 model: _FabricModule = None, save_path: str = None):
+        super().__init__(patience, skip, minmax, rope, model, save_path)
+
+        self.successful_comparison = lambda: None
+        self.load_model = lambda: None
+
+    def __call__(self, value):
+        return False
+
+
 def tictoc(*args):
     # https://stackoverflow.com/questions/3931627/how-to-build-a-decorator-with-optional-parameters
     def wrap(function: Callable):

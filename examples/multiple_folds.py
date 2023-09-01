@@ -4,9 +4,9 @@ import torch
 from pdgrapher import Dataset, PDGrapher, Trainer
 
 def main():
-    torch.set_num_threads(4)
+    """ torch.set_num_threads(4)
     torch.manual_seed(0)
-    np.random.seed(0)
+    np.random.seed(0) """
 
     dataset = Dataset(
         forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",

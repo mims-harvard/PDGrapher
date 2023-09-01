@@ -12,7 +12,7 @@ from ._torch_geometric import GCNConv
 __all__ = ["GCNArgs", "ResponsePredictionModel", "PerturbationDiscoveryModel"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GCNArgs():
     positional_features_dims: int = 16
     embedding_layer_dim: int = 16
@@ -22,16 +22,27 @@ class GCNArgs():
     n_layers_gnn: int = 1
     n_layers_nn: int = 2
 
+    neurons_gnn: list = []
+    neurons_nn: list = []
+
     @classmethod
     def from_dict(cls, args: Dict[str, int]) -> "GCNArgs":
-        instance = cls()
-        instance.positional_features_dims = args.get("positional_features_dims", 16)
+        instance = cls(
+            positional_features_dims = args.get("positional_features_dims", 16),
+            embedding_layer_dim = args.get("embedding_layer_dim", 16),
+            dim_gnn = args.get("dim_gnn", 16),
+            out_channels = args.get("out_channels", 1),
+            num_vars = args.get("num_vars", 1),
+            n_layers_gnn = args.get("n_layers_gnn", 1),
+            n_layers_nn = args.get("n_layers_nn", 2)
+        )
+        """ instance.positional_features_dims = args.get("positional_features_dims", 16)
         instance.embedding_layer_dim = args.get("embedding_layer_dim", 16)
         instance.dim_gnn = args.get("dim_gnn", 16)
         instance.out_channels = args.get("out_channels", 1)
         instance.num_vars = args.get("num_vars", 1)
         instance.n_layers_gnn = args.get("n_layers_gnn", 1)
-        instance.n_layers_nn = args.get("n_layers_nn", 2)
+        instance.n_layers_nn = args.get("n_layers_nn", 2) """
         return instance
 
     def to_dict(self) -> Dict[str, int]:

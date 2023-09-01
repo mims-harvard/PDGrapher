@@ -1,4 +1,5 @@
 -r requirements.txt
+# for development purposes
 build
 sphinx
 myst_parser
@@ -9,3 +10,5 @@ h5py
 csrgraph
 seaborn
 beautifulsoup4
+# for finetuning
+ray[tune]
