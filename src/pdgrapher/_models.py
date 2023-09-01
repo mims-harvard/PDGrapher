@@ -17,7 +17,6 @@ class GCNArgs():
     positional_features_dims: int = 16
     embedding_layer_dim: int = 16
     dim_gnn: int = 16
-    out_channels: int = 1
     num_vars: int = 1
     n_layers_gnn: int = 1
     n_layers_nn: int = 2
@@ -31,7 +30,6 @@ class GCNArgs():
             positional_features_dims = args.get("positional_features_dims", 16),
             embedding_layer_dim = args.get("embedding_layer_dim", 16),
             dim_gnn = args.get("dim_gnn", 16),
-            out_channels = args.get("out_channels", 1),
             num_vars = args.get("num_vars", 1),
             n_layers_gnn = args.get("n_layers_gnn", 1),
             n_layers_nn = args.get("n_layers_nn", 2)
@@ -39,7 +37,6 @@ class GCNArgs():
         """ instance.positional_features_dims = args.get("positional_features_dims", 16)
         instance.embedding_layer_dim = args.get("embedding_layer_dim", 16)
         instance.dim_gnn = args.get("dim_gnn", 16)
-        instance.out_channels = args.get("out_channels", 1)
         instance.num_vars = args.get("num_vars", 1)
         instance.n_layers_gnn = args.get("n_layers_gnn", 1)
         instance.n_layers_nn = args.get("n_layers_nn", 2) """
@@ -80,7 +77,7 @@ class GCNBase(nn.Module):
         for _ in range(args.n_layers_nn-1):
             self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn))
         self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn//2)) # int(args.dim_gnn/2)
-        self.mlp.append(nn.Linear(args.dim_gnn//2, args.out_channels)) # int(args.dim_gnn/2)
+        self.mlp.append(nn.Linear(args.dim_gnn//2, 1)) # int(args.dim_gnn/2), args.out_channels
 
         # Batchnorm MLP
         self.bns_mlp = nn.ModuleList()

@@ -12,7 +12,6 @@ class TestGCNArgs(unittest.TestCase):
             "positional_features_dims": 16,
             "embedding_layer_dim": 16,
             "dim_gnn": 16,
-            "out_channels": 1,
             "num_vars": 1,
             "n_layers_gnn": 1,
             "n_layers_nn": 2,

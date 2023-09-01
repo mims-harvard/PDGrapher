@@ -71,15 +71,14 @@ def main():
     # Define hyperparameter search space
     search_space = {
         # Learning rates
-        "rp_lr": tune.loguniform(1e-6, 1e-2),
-        "rp_lr": tune.loguniform(1e-6, 1e-2),
+        "rp_lr": tune.loguniform(1e-6, 1e-1),
+        "rp_lr": tune.loguniform(1e-6, 1e-1),
         # Supervision loss multiplier
         "supervision_multiplier": tune.loguniform(1e-4, 1),
         # Model architecture
         "positional_features_dims": tune.choice([8, 16, 32, 48, 64, 96, 128]),
         "embedding_layer_dim": tune.choice([8, 16, 32, 48, 64, 96, 128]),
         "dim_gnn": tune.choice([8, 16, 32, 48, 64, 96, 128]),
-        #"out_channels": 1, # 
         "n_layers_gnn": tune.choice([1, 2, 3, 4, 5]),
         "n_layers_nn": tune.choice([1, 2, 3, 4, 5]),
     }
