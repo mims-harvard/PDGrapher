@@ -71,7 +71,7 @@ def main():
     search_space = {
         # Learning rates
         "rp_lr": tune.loguniform(1e-6, 1e-1),
-        "rp_lr": tune.loguniform(1e-6, 1e-1),
+        "pd_lr": tune.loguniform(1e-6, 1e-1),
         # Supervision loss multiplier
         "supervision_multiplier": tune.loguniform(1e-4, 1),
         # Model architecture
@@ -92,7 +92,7 @@ def main():
             metric="val_loss",
             mode="min",
             search_alg=OptunaSearch(),
-            num_samples=400,
+            num_samples=300,
             max_concurrent_trials=2
         ),
         run_config=air.RunConfig(
