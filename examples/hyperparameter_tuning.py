@@ -23,26 +23,27 @@ def main():
         use_intervention_data=True, supervision_multiplier=0.01
     )
 
-    # Get training and testing datasets (this is also part of trainer.train
-    # function, but we need its functionallity here)
-    sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
-    sample_weights_model_2_backward = trainer.fabric.to_device(sample_weights_model_2_backward)
-    pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
-    thresholds = get_thresholds(dataset)
-    thresholds = {k: trainer.fabric.to_device(v) for k, v in thresholds.items()}
-    edge_index = trainer.fabric.to_device(edge_index)
-    (
-        train_loader_forward, train_loader_backward,
-        val_loader_forward, val_loader_backward,
-        test_loader_forward, test_loader_backward
-    ) = trainer.fabric.setup_dataloaders(*dataset.get_dataloaders())
-    es_1 = DummyEarlyStopping()
-    es_2 = DummyEarlyStopping()
-
 
     # Define objective function
     def objective(config):
         # `config` is a dict[any, any]
+
+        # Get training and testing datasets (this is also part of trainer.train
+        # function, but we need its functionallity here)
+        # Apparently setting all of this here is better for memory management...?
+        sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
+        sample_weights_model_2_backward = trainer.fabric.to_device(sample_weights_model_2_backward)
+        pos_weight = sample_weights_model_2_backward[1] / sample_weights_model_2_backward[0]
+        thresholds = get_thresholds(dataset)
+        thresholds = {k: trainer.fabric.to_device(v) for k, v in thresholds.items()}
+        edge_index = trainer.fabric.to_device(edge_index)
+        (
+            train_loader_forward, train_loader_backward,
+            val_loader_forward, val_loader_backward,
+            test_loader_forward, test_loader_backward
+        ) = trainer.fabric.setup_dataloaders(*dataset.get_dataloaders())
+        es_1 = DummyEarlyStopping()
+        es_2 = DummyEarlyStopping()
 
         # Define the model from config and its optimizers
         model_kwargs = GCNArgs.from_dict(config).to_dict() # get values without removing them
@@ -91,6 +92,8 @@ def main():
             metric="val_loss",
             mode="min",
             search_alg=algo,
+            num_samples=100,
+            max_concurrent_trials=1
         ),
         run_config=air.RunConfig(
             name="PDGrapher_tuning",
