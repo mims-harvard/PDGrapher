@@ -98,7 +98,7 @@ def main():
         run_config=air.RunConfig(
             name="PDGrapher_tuning",
             storage_path="examples/PDGrapher",
-            stop={"training_iteration": 1},
+            stop={"training_iteration": 2},
         ),
     )
 
