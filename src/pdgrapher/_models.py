@@ -22,8 +22,8 @@ class GCNArgs():
     n_layers_gnn: int = 1
     n_layers_nn: int = 2
 
-    neurons_gnn: list = list
-    neurons_nn: list = list
+    # neurons_gnn: list = list
+    # neurons_nn: list = list
 
     @classmethod
     def from_dict(cls, args: Dict[str, int]) -> "GCNArgs":

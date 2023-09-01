@@ -15,7 +15,7 @@ class TestGCNArgs(unittest.TestCase):
             "out_channels": 1,
             "num_vars": 1,
             "n_layers_gnn": 1,
-            "n_layers_nn": 2
+            "n_layers_nn": 2,
         }
 
     def test_empty_args(self):
