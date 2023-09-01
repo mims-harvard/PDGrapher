@@ -81,7 +81,6 @@ def main():
         "n_layers_gnn": tune.choice([1, 2, 3, 4, 5]),
         "n_layers_nn": tune.choice([1, 2, 3, 4, 5]),
     }
-    algo = OptunaSearch()
 
     tuner = tune.Tuner(
         tune.with_resources(
@@ -92,9 +91,9 @@ def main():
         tune_config=tune.TuneConfig(
             metric="val_loss",
             mode="min",
-            search_alg=algo,
-            num_samples=100,
-            max_concurrent_trials=1
+            search_alg=OptunaSearch(),
+            num_samples=400,
+            max_concurrent_trials=2
         ),
         run_config=air.RunConfig(
             name="PDGrapher_tuning",
