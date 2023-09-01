@@ -19,13 +19,11 @@ def main():
 
     trainer = Trainer(
         fabric_kwargs={"accelerator": "cuda"},
-        use_forward_data=True, use_backward_data=True, use_supervision=True,
-        use_intervention_data=True, supervision_multiplier=0.01
+        use_forward_data=True, use_backward_data=True, use_supervision=True, use_intervention_data=True
     )
 
-
     # Define objective function
-    def objective(config):
+    def objective(config, dataset, edge_index, trainer):
         # `config` is a dict[any, any]
 
         # Get training and testing datasets (this is also part of trainer.train
@@ -86,7 +84,10 @@ def main():
     algo = OptunaSearch()
 
     tuner = tune.Tuner(
-        objective,
+        tune.with_resources(
+            tune.with_parameters(objective, dataset=dataset, edge_index=edge_index, trainer=trainer),
+            resources={"cpu": 1, "gpu": 1},
+        ),
         param_space=search_space,
         tune_config=tune.TuneConfig(
             metric="val_loss",
@@ -98,7 +99,7 @@ def main():
         run_config=air.RunConfig(
             name="PDGrapher_tuning",
             storage_path="examples/PDGrapher",
-            stop={"training_iteration": 2},
+            stop={"training_iteration": 1},
         ),
     )
 
