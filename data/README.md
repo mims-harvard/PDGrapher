@@ -29,3 +29,7 @@ From [clue.io/releases/data-dashboard](https://clue.io/releases/data-dashboard) 
 
 ## 2. Process the data
 
+All of the processing scripts are run from [process_all_data.sh](process_all_data.sh) script.
+```bash
+./process_all_data.sh
+```
