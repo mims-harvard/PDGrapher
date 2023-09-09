@@ -24,6 +24,7 @@ def main():
         log_train=False, log_test=True
     )
 
+    # Iterate over all of the folds and train on each one
     model_performances = trainer.train_kfold(model, dataset, 50)
 
     print(model_performances)

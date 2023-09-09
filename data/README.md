@@ -7,7 +7,7 @@
 
 ### 1.2 Gene expression data -> [data/lincs/raw](data/lincs/raw) folder
 
-From [clue.io/releases/data-dashboard](https://clue.io/releases/data-dashboard) download next files:
+From [clue.io/releases/data-dashboard](https://clue.io/releases/data-dashboard) download the next files:
 - cellinfo_beta.txt,
 - compoundinfo_beta.txt,
 - geneinfo_beta.txt,
@@ -21,10 +21,10 @@ From [clue.io/releases/data-dashboard](https://clue.io/releases/data-dashboard) 
 - [CosmicCLP_MutantExport.tsv](https://cancer.sanger.ac.uk/cosmic/archive-download#:~:text=COSMIC%20Complete%20Mutation%20Data%20(Targeted%20Screens)), unzip it, (copy of above at another link??)
 - [expert_curated_genes_cosmic.csv](https://cancer.sanger.ac.uk/cosmic/curation)
 
-1.4 Drug targets (mentioned in paper)
+1.4 Drug targets (mentioned in the paper)
 - [TODO](.)
 
-1.5 List of cancer drugs for cancer targets baseline (mentioned in paper)
+1.5 List of cancer drugs for cancer targets baseline (mentioned in the paper)
 - [TODO](.)
 
 ## 2. Process the data

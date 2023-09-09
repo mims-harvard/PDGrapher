@@ -14,6 +14,17 @@ __all__ = ["GCNArgs", "ResponsePredictionModel", "PerturbationDiscoveryModel"]
 
 @dataclass
 class GCNArgs():
+    """
+    Base class for the GCN architecture design.
+
+    Args:
+        positional_features_dims (int, optional): Dimensionality of the features. Defaults to 16.
+        embedding_layer_dim (int, optional): Dimensionality of the embedding layer. Defaults to 16.
+        dim_gnn (int, optional): Size of GNN layer. Defaults to 16.
+        num_vars (int, optional): Number of variables in the underlying graph. Defaults to 1.
+        n_layers_gnn (int, optional): Number of GNN layers. Defaults to 1.
+        n_layers_nn (int, optional): Number of NN layers. Defaults to 2.
+    """
     positional_features_dims: int = 16
     embedding_layer_dim: int = 16
     dim_gnn: int = 16
@@ -21,11 +32,22 @@ class GCNArgs():
     n_layers_gnn: int = 1
     n_layers_nn: int = 2
 
+    # TODO add support for layers of different sizes -> also change in GCNBase class
     # neurons_gnn: list = list
     # neurons_nn: list = list
 
     @classmethod
     def from_dict(cls, args: Dict[str, int]) -> "GCNArgs":
+        """
+        Creates a GCNArgs class from provided dictionary. Extra arguments are
+        ignored. If some keys are not presented, default values are used.
+
+        Args:
+            args (dict[str, int]) Dictionary from which to create this class.
+
+        Returns:
+            GCNArgs: instance of self, created from provided dictionary.
+        """
         instance = cls(
             positional_features_dims = args.get("positional_features_dims", 16),
             embedding_layer_dim = args.get("embedding_layer_dim", 16),
@@ -34,12 +56,6 @@ class GCNArgs():
             n_layers_gnn = args.get("n_layers_gnn", 1),
             n_layers_nn = args.get("n_layers_nn", 2)
         )
-        """ instance.positional_features_dims = args.get("positional_features_dims", 16)
-        instance.embedding_layer_dim = args.get("embedding_layer_dim", 16)
-        instance.dim_gnn = args.get("dim_gnn", 16)
-        instance.num_vars = args.get("num_vars", 1)
-        instance.n_layers_gnn = args.get("n_layers_gnn", 1)
-        instance.n_layers_nn = args.get("n_layers_nn", 2) """
         return instance
 
     def to_dict(self) -> Dict[str, int]:
@@ -47,6 +63,11 @@ class GCNArgs():
 
 
 class GCNBase(nn.Module):
+    """
+    Base class for both Perturbation Discovery model and Response Prediction
+    model. Contains the underlying structure of each model and some common
+    methods. It is not designed to be used directly.
+    """
 
     def __init__(self, args: GCNArgs, out_fun: str, edge_index: torch.Tensor):
         super().__init__()
@@ -145,7 +166,10 @@ class GCNBase(nn.Module):
             self.dictionary_node_to_edge_index_position[node].append(i)
 
 
-class ResponsePredictionModel(GCNBase): # GCNModel
+class ResponsePredictionModel(GCNBase):
+    """
+    Class that represents Response Prediction model.
+    """
 
     def __init__(self, args: GCNArgs, edge_index: torch.Tensor):
         super().__init__(args, "response", edge_index)
@@ -160,13 +184,13 @@ class ResponsePredictionModel(GCNBase): # GCNModel
         and x_j_mask to mask messages x_j (acting as mutilation procedure)
         '''
 
-        x, in_x_binarized = self.get_embeddings(x, batch, topK, binarize_intervention, mutilate_mutations, threshold_input)
+        x, in_x_binarized = self._get_embeddings(x, batch, topK, binarize_intervention, mutilate_mutations, threshold_input)
         x = self.mlp[-1](x)
 
         return self.out_fun(x), in_x_binarized
 
 
-    def get_embeddings(self, x, batch, topK=None, binarize_intervention=False, mutilate_mutations=None, threshold_input=None):
+    def _get_embeddings(self, x, batch, topK=None, binarize_intervention=False, mutilate_mutations=None, threshold_input=None):
         # Random node initialization
         random_dims = torch.empty(x.shape[0], self.positional_features_dims).to(x.device)
         nn.init.normal_(random_dims)
@@ -189,7 +213,10 @@ class ResponsePredictionModel(GCNBase): # GCNModel
         return x, in_x_binarized
 
 
-class PerturbationDiscoveryModel(GCNBase): # GCNModelInterventionDiscovery
+class PerturbationDiscoveryModel(GCNBase):
+    """
+    Class that represents Perturbation Discovery model.
+    """
 
     def __init__(self, args: GCNArgs, edge_index: torch.Tensor):
         super().__init__(args, "perturbation", edge_index)
@@ -204,13 +231,13 @@ class PerturbationDiscoveryModel(GCNBase): # GCNModelInterventionDiscovery
         and x_j_mask to mask messages x_j (acting as mutilation procedure)
         '''
 
-        x = self.get_embeddings(x, batch, topK, mutilate_mutations, threshold_input)
+        x = self._get_embeddings(x, batch, topK, mutilate_mutations, threshold_input)
         x = self.mlp[-1](x)
 
         return self.out_fun(x)
 
 
-    def get_embeddings(self, x, batch, topK=None, mutilate_mutations=None, threshold_input=None):
+    def _get_embeddings(self, x, batch, topK=None, mutilate_mutations=None, threshold_input=None):
         if self._mutilate_graph and mutilate_mutations is None:
             raise ValueError("Mutations should not be None in intervention discovery model")
 
