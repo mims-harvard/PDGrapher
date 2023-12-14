@@ -53,7 +53,7 @@ Documentation can be build with next two commands:
 - `sphinx-apidoc -fe -o docs/source/ src/pdgrapher/` updates the source files from which the documentation is built,
 - `docs/make html` builds the documentation
 
-Then, the documentation can be accessed locally by going to `docs/build/html/index/html`
+Then, the documentation can be accessed locally by going to `docs/build/html/index.html`
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
 
 
