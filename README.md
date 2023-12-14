@@ -49,7 +49,7 @@ This project can be build as a Python library by running `pip install -e .` in t
 
 ## Documentation
 
-Documentation can be accessed [here](docs/build/index.html)
+Documentation can be accessed [here](docs/build/html/index.html)
 
 
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
