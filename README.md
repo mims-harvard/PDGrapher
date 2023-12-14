@@ -28,7 +28,7 @@ pip install torch-sparse==0.6.13
 
 ## Data
 
-For processed data, download the compressed folders and place them in [data/processed/](data/processed/) with the following commands:
+For processed data, download the compressed folders and place them in `data/processed/` with the following commands:
 
 ```
 cd data
