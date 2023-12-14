@@ -4,14 +4,19 @@ import torch
 
 from pdgrapher import Dataset, PDGrapher, Trainer
 
+import os
+torch.set_num_threads(5)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 def main():
     dataset = Dataset(
-        forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
-        backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+        forward_path="data/processed/torch_data/real_lognorm/data_forward_A549.pt",
+        backward_path="data/processed/torch_data/real_lognorm/data_backward_A549.pt",
         splits_path="data/splits/genetic/A549/random/5fold/splits.pt"
     )
 
-    edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch.load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
     model = PDGrapher(edge_index, model_kwargs={"n_layers_nn": 1, "n_layers_gnn": 1, "num_vars": dataset.get_num_vars()},
                       response_kwargs={"train": False}, perturbation_kwargs={"train": False})
 
@@ -23,7 +28,7 @@ def main():
     )
     trainer.logging_paths(name=f"tmp_")
 
-    for fold in range(dataset.num_of_folds-1):
+    for fold in range(1, dataset.num_of_folds+1):
         # restore Response prediction
         save_path = f"examples/PDGrapher/_fold_{fold}_response_prediction.pt"
         checkpoint = torch.load(save_path)
