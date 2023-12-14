@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "PDGrapher"
-copyright = "2023, ggonzales"
-author = "dmohorcic, ggonzales, davidzqhuang"
+copyright = "2023, ggonzalezp"
+author = "ggonzalezp, dmohorcic, davidzqhuang"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

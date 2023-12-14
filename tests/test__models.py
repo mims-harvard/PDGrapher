@@ -4,6 +4,11 @@ import unittest
 from torch import load as torch_load
 
 from pdgrapher._models import GCNArgs, GCNBase, ResponsePredictionModel, PerturbationDiscoveryModel
+import torch
+import os
+torch.set_num_threads(5)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 class TestGCNArgs(unittest.TestCase):
@@ -35,7 +40,7 @@ class TestGCNArgs(unittest.TestCase):
 
 class TestGCNBase(unittest.TestCase):
 
-    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 
     def test_empty_args(self):
         gcnargs = GCNArgs()
@@ -60,7 +65,7 @@ class TestGCNBase(unittest.TestCase):
 
 class TestResponsePredictionModel(unittest.TestCase):
 
-    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 
     def test_empty_args(self):
         gcnargs = GCNArgs()
@@ -83,7 +88,7 @@ class TestResponsePredictionModel(unittest.TestCase):
 
 class TestPerturbationDiscoveryModel(unittest.TestCase):
 
-    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 
     def test_empty_args(self):
         gcnargs = GCNArgs()

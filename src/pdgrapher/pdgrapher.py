@@ -75,10 +75,11 @@ class PDGrapher:
         raise NotImplementedError()
 
 
-    def get_optimizers_and_schedulers(self) -> Tuple[
-        List[Union[optim.Optimizer, List[optim.Optimizer]]],
-        List[Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]]]
-    ]:
+    def get_optimizers_and_schedulers(self):
+    # -> Tuple[
+    #     List[Union[optim.Optimizer, List[optim.Optimizer]]],
+    #     List[Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]]]
+    # ]:
         """
         Returns all optimizers and learning rate schedulers.
 
@@ -104,7 +105,7 @@ class PDGrapher:
 
     def set_optimizers_and_schedulers(
             self, optimizers: List[Union[optim.Optimizer, List[optim.Optimizer]]],
-            schedulers: List[Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]]] = [None, None]
+            schedulers = [None, None]
             ) -> None:
         """
         _summary_
@@ -153,7 +154,7 @@ class PDGrapher:
 
     def _check_schedulers(
             self, optimizer: Union[optim.Optimizer, List[optim.Optimizer]],
-            scheduler: Optional[Union[lr_scheduler.LRScheduler, List[lr_scheduler.LRScheduler]]] = None) -> bool:
+            scheduler = None) -> bool:
         if scheduler is None: # using no scheduler is permited
             return True
 

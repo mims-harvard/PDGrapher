@@ -195,7 +195,7 @@ class Trainer:
         model_performances = list()
         _prev_name = self.logging_name
 
-        for fold_idx in range(dataset.num_of_folds):
+        for fold_idx in range(1, dataset.num_of_folds + 1):
             dataset.prepare_fold(fold_idx)
             self.logging_paths(name=f"{_prev_name}_fold_{fold_idx}_")
             model_tmp = deepcopy(model)

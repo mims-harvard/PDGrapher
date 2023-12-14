@@ -5,7 +5,11 @@ from torch import load as torch_load
 from torch.nn import Module as nn_Module
 
 from pdgrapher import PDGrapher, Dataset, Trainer
-
+import torch
+import os
+torch.set_num_threads(5)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def clean_folder_before_test():
     print("Cleaning previous test...")
@@ -24,11 +28,11 @@ class TestPackage(unittest.TestCase):
 
     def test_single_fold(self):
         dataset = Dataset(
-            forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
-            backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+            forward_path="data/processed/torch_data/real_lognorm/data_forward_A549.pt",
+            backward_path="data/processed/torch_data/real_lognorm/data_backward_A549.pt",
             splits_path="data/splits/genetic/A549/random/1fold/splits.pt"
         )
-        edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+        edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
         model = PDGrapher(edge_index)
         trainer = Trainer(
             fabric_kwargs={"accelerator": "gpu"}, log=True, logging_dir="tests/PDGrapher_test"
@@ -59,11 +63,11 @@ class TestPackage(unittest.TestCase):
 
     def test_multiple_folds(self):
         dataset = Dataset(
-            forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
-            backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+            forward_path="data/processed/torch_data/real_lognorm/data_forward_A549.pt",
+            backward_path="data/processed/torch_data/real_lognorm/data_backward_A549.pt",
             splits_path="data/splits/genetic/A549/random/5fold/splits.pt"
         )
-        edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+        edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
         model = PDGrapher(edge_index)
         trainer = Trainer(
             fabric_kwargs={"accelerator": "gpu"}, log=True, logging_dir="tests/PDGrapher_test"

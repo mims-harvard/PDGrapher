@@ -1,35 +1,21 @@
-## 1. Download required data into appropriate folders
 
-### 1.1 Human protein-protein interaction network data -> [data/ppi/raw](data/ppi/raw) folder
-- [BIOGRID-MV-Physical-3.5.186.tab3](https://downloads.thebiogrid.org/File/BioGRID/Release-Archive/BIOGRID-3.5.186/BIOGRID-MV-Physical-3.5.186.tab3.zip), unzip it into BIOGRID-MV-Physical-3.5.186.tab3.txt in the same folder,
-- [datasets_s1-s4.zip](https://www.science.org/doi/suppl/10.1126/science.1257601/suppl_file/datasets_s1-s4.zip), unzip it and copy DataS1_interactome.tsv from data folder into raw folder,
-- [HuRI.tsv](http://www.interactome-atlas.org/data/HuRI.tsv)
 
-### 1.2 Gene expression data -> [data/lincs/raw](data/lincs/raw) folder
 
-From [clue.io/releases/data-dashboard](https://clue.io/releases/data-dashboard) download the next files:
-- cellinfo_beta.txt,
-- compoundinfo_beta.txt,
-- geneinfo_beta.txt,
-- instinfo_beta.txt,
-- level3_beta_ctl_n188708x12328.gctx,
-- level3_beta_trt_sh_n453175x12328.gctx,
-- level3_beta_trt_xpr_n420583x12328.gctx
 
-### 1.3 Disease-associated genes data -> [data/cosmic/raw](data/cosmic/raw)
-- [CosmicCLP_MutantExport.tsv](https://cancer.sanger.ac.uk/cell_lines/archive-download#:~:text=Complete%20mutation%20data), unzip it,
-- [CosmicCLP_MutantExport.tsv](https://cancer.sanger.ac.uk/cosmic/archive-download#:~:text=COSMIC%20Complete%20Mutation%20Data%20(Targeted%20Screens)), unzip it, (copy of above at another link??)
-- [expert_curated_genes_cosmic.csv](https://cancer.sanger.ac.uk/cosmic/curation)
+# Downloading and expanding processed datasets:
 
-1.4 Drug targets (mentioned in the paper)
-- [TODO](.)
+Download datasets [here](https://figshare.com/account/articles/24798855) and expanded manually:
+* Place `torch_data.tar.gz` in `data/processed` folder and expand
+* Place `splits.tar.gz`in `data` and expand
 
-1.5 List of cancer drugs for cancer targets baseline (mentioned in the paper)
-- [TODO](.)
+Alternatively, datasets can be downloaded and expanded using the commands:
 
-## 2. Process the data
-
-All of the processing scripts are run from [process_all_data.sh](process_all_data.sh) script.
-```bash
-./process_all_data.sh
+```
+mkdir processed
+cd processed
+wget https://figshare.com/ndownloader/files/43624557
+tar -xzvf torch_data.tar.gz
+cd ../
+wget https://figshare.com/ndownloader/files/43632327
+tar -xzvf splits.tar.gz
 ```

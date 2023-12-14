@@ -11,11 +11,11 @@ from pdgrapher._models import GCNArgs
 
 def main():
     dataset = Dataset(
-        forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
-        backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+        forward_path="data/processed/torch_data/real_lognorm/data_forward_A549.pt",
+        backward_path="data/processed/torch_data/real_lognorm/data_backward_A549.pt",
         splits_path="data/splits/genetic/A549/random/1fold/splits.pt"
     )
-    edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch.load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 
     trainer = Trainer(
         fabric_kwargs={"accelerator": "cuda"},

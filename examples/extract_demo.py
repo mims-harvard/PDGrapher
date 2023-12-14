@@ -12,12 +12,12 @@ from pdgrapher import Dataset, PDGrapher
 from pdgrapher._utils import get_thresholds, calculate_loss_sample_weights
 
 dataset = Dataset(
-    forward_path="data/rep-learning-approach-3/processed/real_lognorm/data_forward_A549.pt",
-    backward_path="data/rep-learning-approach-3/processed/real_lognorm/data_backward_A549.pt",
+    forward_path="data/processed/torch_data/real_lognorm/data_forward_A549.pt",
+    backward_path="data/processed/torch_data/real_lognorm/data_backward_A549.pt",
     splits_path="data/splits/genetic/A549/random/1fold/splits.pt"
 )
 
-edge_index = torch.load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+edge_index = torch.load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 model = PDGrapher(edge_index, model_kwargs={"n_layers_nn": 1, "n_layers_gnn": 1, "num_vars": dataset.get_num_vars()})
 
 save_path = f"examples/PDGrapher/fold_1_response_prediction.pt"

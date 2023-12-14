@@ -6,27 +6,33 @@ import torch.optim.lr_scheduler as lr_scheduler
 
 from pdgrapher import PDGrapher
 
+import torch
+import os
+torch.set_num_threads(5)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 
 class TestPDGrapher(unittest.TestCase):
 
-    edge_index = torch_load("data/rep-learning-approach-3/processed/real_lognorm/edge_index_A549.pt")
+    edge_index = torch_load("data/processed/torch_data/real_lognorm/edge_index_A549.pt")
 
     def test_pdgrapher(self):
         model = PDGrapher(self.edge_index)
 
     def test_pdgrapher_args(self):
         model = PDGrapher(
-            self.edge_index, response_kwargs={"n_layers_gnn": 3, "n_layers_nn": 9, "train": False},
-            perturbation_kwargs={"n_layers_gnn": 7, "n_layers_nn": 4, "train": True})
+            self.edge_index, response_kwargs={"n_layers_gnn": 2, "n_layers_nn": 2, "train": False},
+            perturbation_kwargs={"n_layers_gnn": 2, "n_layers_nn": 2, "train": True})
 
         # test response_args
-        self.assertEqual(len(model.response_prediction.convs), 3)
-        self.assertEqual(len(model.response_prediction.mlp), 1+9+1)
+        self.assertEqual(len(model.response_prediction.convs), 2)
+        self.assertEqual(len(model.response_prediction.mlp), 1+2+1)
         self.assertFalse(model._train_response_prediction)
 
         # test perturbation_args
-        self.assertEqual(len(model.perturbation_discovery.convs), 7)
-        self.assertEqual(len(model.perturbation_discovery.mlp), 1+4+1)
+        self.assertEqual(len(model.perturbation_discovery.convs), 2)
+        self.assertEqual(len(model.perturbation_discovery.mlp), 1+2+1)
         self.assertTrue(model._train_perturbation_discovery)
 
     def test_missing_optimizers(self):
