@@ -206,11 +206,11 @@ def filter_cell_lines(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, log_
 	log_handle.write('Filtering to keep only cell lines with highest mumber of perturbed genes\n------\n')
 
 	#####CRISPR
-	#Obtain cell lines with the most perturbations (> 4K genes perturbed)
+	#Obtain cell lines with the most perturbations (> 90th-percentile)
 	df_xpr = pd.DataFrame(inst_info_xpr[['cmap_name', 'cell_iname']].groupby('cell_iname', as_index=True).apply(lambda x: x['cmap_name'].unique()))
 	df_xpr = pd.DataFrame([(i, len(df_xpr.loc[i][0])) for i in df_xpr.index], columns =['cell_line', 'n_cmap_names'])
 	df_xpr = df_xpr.sort_values(by='n_cmap_names')
-	keep_cell_lines = df_xpr[df_xpr['n_cmap_names']>4000]['cell_line'].tolist()
+	keep_cell_lines = df_xpr[df_xpr['n_cmap_names']>np.percentile(df_xpr['n_cmap_names'], 60)]['cell_line'].tolist()
 
 	#Find indices of samples that are on the desired cell lines
 	keep_index = []
@@ -248,7 +248,7 @@ def filter_cell_lines_custom(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ct
 	log_handle.write('Filtering to keep only cell lines: A549, PC3, MCF7\n------\n')
 	#####CRISPR
 	#Obtain cell lines with the most perturbations (> 4K genes perturbed)
-	keep_cell_lines = ['A549', 'PC3', 'MCF7']
+	keep_cell_lines = ['A549', 'PC3', 'MCF7', 'A375', 'HT29', 'ES2', 'BICR6', 'YAPC', 'AGS', 'U251MG']
 	#Find indices of samples that are on the desired cell lines
 	keep_index = []
 	for i in range(len(inst_info_xpr)):
@@ -860,6 +860,7 @@ def main():
 	inst_info_xpr, inst_info_ctl, gene_info, matrix_xpr, matrix_ctl = loads_data(DATA_ROOT, log_handle)
 	inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl = filter_data_metadata(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, log_handle)
 	inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, keep_cell_lines = filter_cell_lines_custom(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, log_handle)
+	# inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, keep_cell_lines = filter_cell_lines(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, log_handle)
 	inst_info_xpr, matrix_xpr = filter_samples_with_unknown_perturbed_genes(inst_info_xpr, matrix_xpr, gene_info, log_handle)
 	use_log=True
 	normalize_and_save(inst_info_xpr, matrix_xpr, inst_info_ctl, matrix_ctl, gene_info, keep_cell_lines, log_handle, outdir, use_log)

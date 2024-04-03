@@ -31,7 +31,6 @@ DATA_ROOT = "../../raw/lincs/2022-02-LINCS_Level3/data/"
 
 #function updated from the one in process_data to load the cell lines of interest
 def loads_data(DATA_ROOT, log_handle):
-	healhty_cell_lines = ['MCF10A', 'NL20', 'RWPE1']
 
 	#Loads metadata
 	inst_info = pd.read_csv(os.path.join(DATA_ROOT, 'instinfo_beta.txt'), sep="\t", low_memory=False)

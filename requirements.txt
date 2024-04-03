@@ -139,7 +139,7 @@ opt-einsum==3.3.0
 optuna==2.10.0
 outdated==0.2.1
 packaging==21.3
-pandas
+pandas==1.5.1
 pandas-flavor==0.2.0
 pandocfilters==1.5.0
 parso==0.8.3

@@ -15,7 +15,7 @@ outdir = '../../processed/cosmic'
 os.makedirs(outdir, exist_ok=True)
 
 
-cell_lines = ['A375', 'A549', 'PC-3', 'MCF7', 'HT-29']
+cell_lines = ['A549', 'PC-3', 'MCF7', 'BT-20', 'MDA-MB-231', 'VCaP']
 
 
 
@@ -36,9 +36,9 @@ for cell_line in cell_lines:
 	for column in columns:
 		log_handle.write(column+'\n')
 		log_handle.write(str(Counter(data_i[column])) +'\n\n')
-	log_handle.write('Total genes mutated:\t{}\n'.format(len(data_i['Gene name'])))
+	log_handle.write('Total genes mutated:\t{}\n\n\n\n'.format(len(data_i['Gene name'])))
 
-log_handle.close()
+
 
 
 
@@ -47,14 +47,15 @@ log_handle.close()
 	#Filter to keep only verified genes
 data = data[data['Mutation verification status'] == 'Verified']
 
+
 	#Filter to keep only curated genes
-curated_genes = pd.read_csv('../../raw/cosmic/2022-10-COSMIC/data/expert_curated_genes_cosmic.csv')['Genes'].tolist()
+curated_genes = pd.read_csv('../../raw/cosmic/2022-10-COSMIC/data/expert_curated_genes_cosmic_2024.csv', sep='\t')['Genes'].tolist()
 mask = [gene in curated_genes for gene in data['Gene name']]
-data = data[mask]
-data['Sample name'] = [e.replace('-','') for e in data['Sample name']]
+data_curated = data[mask]
+data_curated['Sample name'] = [e.replace('-','').upper() for e in data_curated['Sample name']]
+
 
 #Save file
-data.to_csv(osp.join(outdir, 'CosmicCLP_MutantExport_only_verified_and_curated.csv'))
-
-
-
+data_curated.to_csv(osp.join(outdir, 'CosmicCLP_MutantExport_only_verified_and_curated.csv'))
+log_handle.write(str(data_curated['Sample name'].value_counts()))
+log_handle.close()

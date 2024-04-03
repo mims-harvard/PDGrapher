@@ -188,51 +188,6 @@ def stats_data(inst_info_cp, matrix_cp, matrix_ctl, gene_info, df_targets):
 	fig.savefig(osp.join(outdir,'exploration_ge_compounds.png'))
 
 
-	# # shRNA
-	# f = h5py.File(os.path.join(DATA_ROOT, 'level3_beta_trt_sh_n453175x12328.gctx'), 'r')
-	# matrix_sh = f['0']['DATA']['0']['matrix'][:].transpose()
-	# gene_ids_sh = f['0']['META']['ROW']['id'][:]
-	# sample_ids_sh = f['0']['META']['COL']['id'][:]
-	# matrix_sh = pd.DataFrame(matrix_sh, columns = sample_ids_sh.astype(str), index = gene_ids_sh.astype(int))
-
-	# inst_info = pd.read_csv(os.path.join(DATA_ROOT, 'instinfo_beta.txt'), sep="\t", low_memory=False)
-	# inst_info_sh = inst_info[np.logical_and(inst_info['pert_type'] == 'trt_sh', inst_info['failure_mode'].isna()) ].reset_index(inplace=False, drop=True)
-
-	# values_pert = {}
-	# values_control = {}
-	# for i in range(len(inst_info_sh)):
-	# 	gene_symbol = inst_info_sh.at[i, 'cmap_name']
-	# 	if gene_symbol in dict_symbol_id:					#if the cmap_name of gene is in the gene_info
-	# 		sample_id = inst_info_sh.at[i, 'sample_id']
-	# 		gene_id = dict_symbol_id[gene_symbol]
-	# 		if gene_id in values_pert:
-	# 			values_pert[gene_id].append(matrix_sh.at[gene_id, sample_id])
-	# 		else:
-	# 			values_pert[gene_id] = [matrix_sh.at[gene_id, sample_id]]
-
-
-	# for gene_symbol in list(set(inst_info_sh['cmap_name'])):
-	# 	if gene_symbol in dict_symbol_id:				#if the cmap_name of gene is in the gene_info
-	# 		gene_id = dict_symbol_id[gene_symbol]
-	# 		values_control[gene_id] = [matrix_ctl.loc[gene_id]]
-
-	# for key in values_pert:
-	# 	values_pert[key] = np.mean(values_pert[key])
-
-	# for key in values_control:
-	# 	values_control[key] = np.mean(values_control[key])
-
-	# fig, (ax1, ax2) = plt.subplots(2, figsize=(16,6))
-	# ax1.hist(values_pert.values())
-	# ax2.hist(values_control.values())
-	# ax1.set_title('Values of perturbed genes (avg) - shRNA')
-	# ax2.set_title('Values of genes in control (avg)')
-	# fig.savefig(osp.join(outdir,'exploration_ge_sh.png'))
-
-	# # cleanup
-	# del matrix_sh
-	# del gene_ids_sh
-	# del sample_ids_sh
 	return
 
 
@@ -247,6 +202,7 @@ def stats_data(inst_info_cp, matrix_cp, matrix_ctl, gene_info, df_targets):
 #1. Filter to keep only cell lines with more perturbations
 
 def stats_control(inst_info_ctl, log_handle):
+	log_handle.write('STATS CONTROL DATA\n***********************************\n')
 	#Stats unique cell lines
 	log_handle.write('Unique cell lines:\t{}:\n'.format(len(set(inst_info_ctl['cell_iname']))))
 	for c in list(set(inst_info_ctl['cell_iname'])):
@@ -296,6 +252,8 @@ def stats_control(inst_info_ctl, log_handle):
 	for i, v in enumerate(zip(df.index, df[0])):
 		log_handle.write('{}:\t{}\n'.format(v[0], v[1]))
 
+	log_handle.write('\n***********************************\n')
+
 	return
 
 
@@ -307,7 +265,48 @@ def filter_cell_lines(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_ha
 	df_cp = pd.DataFrame(inst_info_cp[['cmap_name', 'cell_iname']].groupby('cell_iname', as_index=True).apply(lambda x: x['cmap_name'].unique()))
 	df_cp = pd.DataFrame([(i, len(df_cp.loc[i][0])) for i in df_cp.index], columns =['cell_line', 'n_cmap_names'])
 	df_cp = df_cp.sort_values(by='n_cmap_names')
-	keep_cell_lines = df_cp[df_cp['n_cmap_names']>4000]['cell_line'].tolist()
+
+	keep_cell_lines = df_cp[df_cp['n_cmap_names']>np.percentile(df_cp['n_cmap_names'], 90)]['cell_line'].tolist()
+
+	#Find indices of samples that are on the desired cell lines
+	keep_index = []
+	for i in range(len(inst_info_cp)):
+		if inst_info_cp.at[i, 'cell_iname'] in keep_cell_lines:
+			keep_index.append(i)
+
+
+	inst_info_cp = inst_info_cp.loc[keep_index].reset_index(inplace=False, drop=True) #filter from metadata
+	list_ids = list(inst_info_cp['sample_id'])	#obtain sample ID from metadata
+	matrix_cp = matrix_cp[list_ids]	#Filtered data matrix
+	log_handle.write('Compounds:\t{} datapoints\n'.format(matrix_cp.shape[1]))
+
+
+
+	#####CONTROL
+	keep_index = []
+	for i in range(len(inst_info_ctl)):
+		if inst_info_ctl.at[i, 'cell_iname'] in keep_cell_lines:
+			keep_index.append(i)
+
+
+	inst_info_ctl = inst_info_ctl.loc[keep_index].reset_index(inplace=False, drop=True)  #filter from metadata
+	list_ids = list(inst_info_ctl['sample_id'])	#obtain sample ID from metadata
+	matrix_ctl = matrix_ctl[list_ids]	#Filtered data matrix
+	log_handle.write('CONTROL:\t{} datapoints\n'.format(matrix_ctl.shape[1]))
+
+	# Stats
+	stats_control(inst_info_ctl, log_handle)
+
+	return inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines
+
+
+
+
+def filter_cell_lines_custom(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_handle):
+	log_handle.write('Filtering to keep custom list of cell lines\n------\n')
+
+	#####Compound
+	keep_cell_lines = ['A549', 'PC3', 'MCF7', 'VCAP', 'MDAMB231', 'BT20', 'HA1E', 'HT29', 'A375', 'HELA', 'YAPC']
 
 	#Find indices of samples that are on the desired cell lines
 	keep_index = []
@@ -664,7 +663,8 @@ def main():
 	sample_ids_cp, inst_info_cp, inst_info_ctl, gene_info, matrix_cp, matrix_ctl, df_targets = loads_data(DATA_ROOT, log_handle)
 	print('loaded data - lognorm', inst_info_cp.shape)
 
-	inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines = filter_cell_lines(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_handle)
+	# inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines = filter_cell_lines(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_handle)
+	inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines = filter_cell_lines_custom(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_handle)
 	print('filtered cell lines - lognorm', inst_info_cp.shape)
 
 
