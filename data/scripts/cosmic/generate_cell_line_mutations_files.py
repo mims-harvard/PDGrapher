@@ -1,7 +1,6 @@
 '''
-Processes CosmicCLP_MutantExport.tsv to create a file with cell line: mutations
-Expert curated list obtained from:https://cancer.sanger.ac.uk/cell_lines/curation# 
-on 20th Sept 2022
+Processes CosmicCLP_MutantExport.tsv (15th Sept 2022) to create a file with cell line: mutations 
+Expert curated list obtained from:https://cancer.sanger.ac.uk/cell_lines/curation#  (18th March 2024)
 
 '''
 

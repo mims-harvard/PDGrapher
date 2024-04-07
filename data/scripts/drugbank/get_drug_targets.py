@@ -1,3 +1,6 @@
+'''
+Processess DrugBank full database to get txt file with drug names and targets
+'''
 from bs4 import BeautifulSoup
 import pandas as pd
 import os

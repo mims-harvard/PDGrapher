@@ -1,7 +1,7 @@
 '''
 Process LINCS data of healhty cell lines
 
-???MCF10A, NL20, RWPE1???
+-- MCF10A, NL20, RWPE1
 
 Will do some processing first and then rely on the functions in process_data.py
 ######ONLY DIFFERENCE WITH CRISPR FILE IS THAT I USE CTL_VEHICLE FOR MCF10A INSTEAD OF CTL_UNTRT

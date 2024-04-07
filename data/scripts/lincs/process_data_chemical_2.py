@@ -1,5 +1,14 @@
-##Normalizes compound, and Control data
-##Saves data as npz
+''' 
+Normalizes perturbed (treated) and control (diseased) data of chemical interventions
+Saves data as npz
+
+1. Reads data (load_data)
+2. Filters to keep only the cell lines that we use in experiments (filter_cell_lines_custom)
+3. Filters to keep only the samples in metadata (filter_data_metadata)
+4. Maps drug gene targets to LINCS genes (map_gene_targets_to_lincs)
+5. Filters out samples for which the drug targets are not in LINCS genes (filter_samples_with_unknown_perturbed_genes)
+6. Normalizes data between (0,1) and save (normalize_and_save)
+'''
 import pandas as pd
 import h5py
 import os

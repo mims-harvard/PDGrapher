@@ -1,5 +1,5 @@
 '''
-Export PPI with all genes in LINCS
+Export PPI with all genes in LINCS (those that overlap)
 '''
 
 #Generate a subset of the PPI
