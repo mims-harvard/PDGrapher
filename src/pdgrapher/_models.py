@@ -97,6 +97,7 @@ class GCNBase(nn.Module):
         self.mlp.append(nn.Linear(args.dim_gnn + 2*args.embedding_layer_dim, args.dim_gnn))
         for _ in range(args.n_layers_nn-1):
             self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn))
+
         self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn//2)) # int(args.dim_gnn/2)
         self.mlp.append(nn.Linear(args.dim_gnn//2, 1)) # int(args.dim_gnn/2), args.out_channels
 
@@ -104,6 +105,7 @@ class GCNBase(nn.Module):
         self.bns_mlp = nn.ModuleList()
         for _ in range(args.n_layers_nn):
             self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn))
+            
         self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn//2)) # int(args.dim_gnn/2)
 
         # Output function

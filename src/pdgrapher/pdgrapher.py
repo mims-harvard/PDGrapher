@@ -13,8 +13,8 @@ __all__ = ["PDGrapher"]
 
 class PDGrapher:
     """
-    PDGrapher is a model that... It consists of two submodels: Response
-    Prediction Model (RP) and Perturbation Discovery Model (PD).
+    PDGrapher is a model that predicts therapeutic perturbagens.
+    It consists of two submodels: Response Prediction Model (RP) and Perturbation Discovery Model (PD).
     """
 
     def __init__(self, edge_index: torch.Tensor, *, model_kwargs: Dict[str, Any] = {},
@@ -44,6 +44,7 @@ class PDGrapher:
             train (bool): Whether to train this model. Defaults to True.
         """
 
+        # import pdb; pdb.set_trace()
         # Populate response_kwargs and perturbation_kwargs with default args from
         # model_args
         response_kwargs = {**model_kwargs, **response_kwargs}

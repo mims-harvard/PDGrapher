@@ -71,7 +71,7 @@ class Dataset:
         _test_condition(not any(x in set_teib for x in set_trib), "Overlap between train and test indices should be zero (backward)")
         _test_condition(not any(x in set_teib for x in set_vib), "Overlap between validation and test indices should be zero (backward)")
 
-    def get_dataloaders(self, batch_size: int = 6, **kwargs) -> List[DataLoader]:
+    def get_dataloaders(self, batch_size: int = 64, **kwargs) -> List[DataLoader]:
         kwargs = {**{"shuffle": True, "drop_last": True}, **kwargs} # default kwargs
         return [
             DataLoader(self.train_dataset_forward, batch_size=batch_size, **kwargs),
