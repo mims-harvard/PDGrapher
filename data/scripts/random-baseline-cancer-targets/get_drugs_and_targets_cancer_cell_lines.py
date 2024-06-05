@@ -20,13 +20,13 @@ cancer_cell_mapping = {'breast': 'MCF7',
 
 
 #Loads data
-cancer_drugs = pd.read_csv('../../raw/nci/2022-11-NCI/cancer_drugs.csv')
+cancer_drugs = pd.read_csv('../../raw/nci/2022-11-NCI/data/cancer_drugs.csv')
 cancer_drugs['drug'] =[e.lower() for e in cancer_drugs['drug']]
-drug_targets = pd.read_csv('../../drugbank/processed/targets.txt', sep=',', low_memory=False)
-drug_targets['1'] = [e.lower() for e in drug_targets['1']]
-drug_targets['2'] = [str(e).lower() for e in drug_targets['2']]
-drug_targets.columns = ['drug_id', 'drug_name', 'drug_synonyms', 'target_id', 'target_name', 'gene_name', 'identifiers', 'organism']
+drug_targets = pd.read_csv('../../processed/drugbank/targets.txt', sep=',', low_memory=False)
 
+drug_targets.columns = ['drug_id', 'drug_name', 'drug_synonyms', 'target_id', 'target_name', 'gene_name', 'gene_synonyms', 'identifiers', 'organism']
+drug_targets['drug_name'] = [e.lower() for e in drug_targets['drug_name']]
+drug_targets['drug_synonyms'] = [str(e).lower() for e in drug_targets['drug_synonyms']]
 
 #Create dictionary of synonym-->drug
 dict_syn_drug = dict()

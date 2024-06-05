@@ -349,7 +349,7 @@ def main():
 	log_handle = open(osp.join(outdir, 'log_process_data_healthy_lognorm.txt'), 'w')
 	inst_info_ctl, gene_info, matrix_ctl = loads_data(DATA_ROOT, log_handle)
 	inst_info_ctl, matrix_ctl = filter_data_metadata(inst_info_ctl, matrix_ctl, log_handle)
-	stats_control(inst_info_ctl, log_handle)
+	#stats_control(inst_info_ctl, log_handle)
 	use_log=True
 	normalize_and_save(inst_info_ctl, matrix_ctl, gene_info, log_handle, outdir, use_log)
 	log_handle.close()
