@@ -1,3 +1,10 @@
+'''
+This file loads model trained on one cell line and evaluates on all other cell lines
+
+Note: the final performance that needs to be reported is the aggregation of performance by each of the other 9 models
+'''
+
+
 import torch
 import pandas as pd
 import sys
@@ -15,7 +22,6 @@ sys.path.append('../../../../baselines/source')
 from gcn import GCNModelInterventionDiscovery
 from utils import get_threshold_diseased, get_threshold_treated
 from torch_geometric.loader import DataLoader
-
 
 
 
@@ -53,13 +59,20 @@ path = 'A549'
 outdir = path
 path_model = path
 
-dataset = Dataset(
+test_cell_line = 'A375' #this has to be for each of the other cell lines as well (except for the train cell line)
+
+
+train_dataset = Dataset(
     forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{cell_line}.pt",
     backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{cell_line}.pt",
     splits_path=f"../data/processed/splits/chemical/{cell_line}/random/5fold/splits.pt"
 )
-
-edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{cell_line}.pt")
+test_dataset = Dataset(
+    forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{test_cell_line}.pt",
+    backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{test_cell_line}.pt",
+    splits_path=f"../data/processed/splits/chemical/{test_cell_line}/random/5fold/splits.pt"
+)
+edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{test_cell_line}.pt")
 
 
 
@@ -92,9 +105,9 @@ for split_index in range(1,6):
     model.perturbation_discovery.load_state_dict(checkpoint["model_state_dict"])
 
     #loads fold-specific dataset
-    dataset.prepare_fold(fold)
+    test_dataset.prepare_fold(fold)
 
-    thresholds = get_thresholds(dataset)
+    thresholds = get_thresholds(train_dataset)
     thresholds = {k: model.fabric.to_device(v) for k, v in thresholds.items()} 
     model.response_prediction.edge_index = model.fabric.to_device(model.response_prediction.edge_index)
     model.perturbation_discovery.edge_index = model.fabric.to_device(model.perturbation_discovery.edge_index)
@@ -106,7 +119,7 @@ for split_index in range(1,6):
                 train_loader_forward, train_loader_backward,
                 val_loader_forward, val_loader_backward,
                 test_loader_forward, test_loader_backward
-            ) = dataset.get_dataloaders(num_workers = 20)
+            ) = test_dataset.get_dataloaders(num_workers = 20)
 
 
     top_1_binary = []
@@ -152,15 +165,4 @@ log.write('interv acc (all): {} ± {}\n'.format(np.mean(int_acc_perf_all), np.st
 log.write('n zeros: {} ± {}\n'.format(np.mean(avg_zeros), np.std(avg_zeros)))
 log.write('all non-zeros (final PD accuracy): {}\n'.format(avg_zeros))
 log.close()
-
-
-
-
-
-
-
-
-
-
-
 
