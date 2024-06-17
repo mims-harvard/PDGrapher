@@ -198,7 +198,8 @@ for cell_line in cell_lines:
 
 
 
-            
+            log.write('--------------------------\n')
+            log.write('--------------------------\n')
             log.write('Train cell line: {}, Test cell line: {}\n'.format(cell_line, test_cell_line))
             log.write('recall@1: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1), np.std(all_recall_at_1)))
             log.write('recall@10: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_10), np.std(all_recall_at_10)))
@@ -215,6 +216,7 @@ for cell_line in cell_lines:
             log.write('recall@1000: {}\n'.format(all_recall_at_1000))
             log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions))
             log.write('ranking score: {}\n'.format(all_rankings))
+            log.write('--------------------------\n\n')
 
         log.close()
 
