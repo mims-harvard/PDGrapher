@@ -28,7 +28,7 @@ def main():
     """ torch.set_num_threads(4)
     torch.manual_seed(0)
     np.random.seed(0) """
-    outdir = f'./results/chemical/{cell_line}'
+    outdir = f'./results/chemical/{cell_line}_corrected_pos_emb'
     os.makedirs(outdir, exist_ok=True)
 
 

@@ -24,7 +24,12 @@ import os
 import os.path as osp
 torch.set_num_threads(20)
 from datetime import datetime
-from pdgrapher import Dataset, PDGrapher, Trainer
+
+# from pdgrapher.pdgrapher_old import PDGrapherOld
+
+from pdgrapher import PDGrapher
+
+from pdgrapher import Trainer, Dataset
 import sys
 from glob import glob
 
@@ -62,12 +67,12 @@ for cell_line in cell_lines:
 
     #Dataset
     dataset = Dataset(
-        forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{cell_line}.pt",
-        backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{cell_line}.pt",
-        splits_path=f"../data/processed/splits/chemical/{cell_line}/random/5fold/splits.pt"
+        forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{cell_line.split('_')[0]}.pt",
+        backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{cell_line.split('_')[0]}.pt",
+        splits_path=f"../data/processed/splits/chemical/{cell_line.split('_')[0]}/random/5fold/splits.pt"
     )
 
-    edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{cell_line}.pt")
+    edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{cell_line.split('_')[0]}.pt")
 
 
 
@@ -115,7 +120,7 @@ for cell_line in cell_lines:
             dataset.prepare_fold(fold)
 
             thresholds = get_thresholds(dataset)
-            thresholds = {k: v.to(device) for k, v in thresholds.items()} 
+            thresholds = {k: v.to(device) if v is not None else v for k, v in thresholds.items()} 
 
 
             model.response_prediction.edge_index = model.response_prediction.edge_index.to(device)
