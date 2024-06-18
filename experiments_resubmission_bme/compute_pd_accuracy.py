@@ -36,12 +36,13 @@ from glob import glob
 from pdgrapher._utils import get_thresholds
 
 # Check if at least one argument is provided
-if len(sys.argv) < 2:
-    print("Usage: script.py <cell_line1> <cell_line2> ... <cell_lineN>")
+if len(sys.argv) < 3:
+    print("Usage: script.py <data_type> <cell_line1> <cell_line2> ... <cell_lineN>")
     sys.exit(1)  # Exit the script with an error code
 
 # Get the list of cell lines from command line arguments (excluding the script name itself)
-cell_lines = sys.argv[1:]
+data_type = sys.argv[1]
+cell_lines = sys.argv[2:]
 
 # Example: Print the list of cell lines
 print("Received cell lines:", cell_lines)
@@ -49,36 +50,49 @@ print("Received cell lines:", cell_lines)
 # Process each cell line (for demonstration purposes, we'll just print them)
 for cell_line in cell_lines:
     print(f"Processing cell line: {cell_line}")
-    # Add your processing code here
-        
+    
+    # Some params
+    use_backward_data = True
+    use_supervision = True #whether to use supervision loss
+    use_intervention_data = True #whether to use cycle loss
+    current_date = datetime.now() 
     n_layers_nn = 1
 
     global use_forward_data
     use_forward_data = True
-    if cell_line in ['HA1E', 'HT29', 'A375', 'HELA']:
-        use_forward_data = False
 
-    use_backward_data = True
-    use_supervision = True #whether to use supervision loss
-    use_intervention_data = True #whether to use cycle loss
-    current_date = datetime.now()
+    if data_type == 'chemical':
+        if cell_line.split('_')[0] in ['HA1E', 'HT29', 'A375', 'HELA']:
+            use_forward_data = False
 
+        #Dataset
+        dataset = Dataset(
+            forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{cell_line.split('_')[0]}.pt",
+            backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{cell_line.split('_')[0]}.pt",
+            splits_path=f"../data/processed/splits/chemical/{cell_line.split('_')[0]}/random/5fold/splits.pt"
+        )
 
+        edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{cell_line.split('_')[0]}.pt")
 
-    #Dataset
-    dataset = Dataset(
-        forward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_forward_{cell_line.split('_')[0]}.pt",
-        backward_path=f"../data/processed/torch_data/chemical/real_lognorm/data_backward_{cell_line.split('_')[0]}.pt",
-        splits_path=f"../data/processed/splits/chemical/{cell_line.split('_')[0]}/random/5fold/splits.pt"
-    )
+        #Modify based on folder name
+        paths = glob('results/chemical/{}/*'.format(cell_line))
+    
+    elif data_type == 'genetic':
+        if cell_line.split('_')[0] in ['ES2', 'BICR6', 'YAPC', 'AGS', 'U251MG', 'HT29', 'A375']:
+            use_forward_data = False
 
-    edge_index = torch.load(f"../data/processed/torch_data/chemical/real_lognorm/edge_index_{cell_line.split('_')[0]}.pt")
+        #Dataset
+        dataset = Dataset(
+            forward_path=f"../data/processed/torch_data/real_lognorm/data_forward_{cell_line.split('_')[0]}.pt",
+            backward_path=f"../data/processed/torch_data/real_lognorm/data_backward_{cell_line.split('_')[0]}.pt",
+            splits_path=f"../data/processed/splits/genetic/{cell_line.split('_')[0]}/random/5fold/splits.pt"
+        )
 
+        edge_index = torch.load(f"../data/processed/torch_data/real_lognorm/edge_index_{cell_line.split('_')[0]}.pt")
 
+        #Modify based on folder name
+        paths = glob('results/genetic/{}/*'.format(cell_line))  
 
-
-    #Modify based on folder name
-    paths = glob('results/chemical/{}/*'.format(cell_line))
 
 
     for path in paths:
