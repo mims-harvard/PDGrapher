@@ -110,6 +110,21 @@ def reindex_dag_nodes(dag, sorted_nodes):
     return new_dag
 
 
+def reindex_perturbed_nodes(perturbed_nodes, sorted_nodes):
+    """
+    Reindex a set of nodes perturbed based on the ordering provided in sorted_nodes.
+    Args:
+    - perturbed_nodes: A list with indices of perturbed nodes.
+    - sorted_nodes: A list of nodes in the DAG sorted according to some criteria (e.g., topological sort).
+    Returns:
+    - new_perturbed_nodes: A list with reindexed perturbed nodes
+    """
+    # Create a mapping from old indices to new indices based on sorted_nodes
+    index_mapping = {old_index: new_index for new_index, old_index in enumerate(sorted_nodes)}
+    # Apply the mapping to reindex nodes
+    new_perturbed_nodes = [index_mapping[e] for e in perturbed_nodes]
+    return new_perturbed_nodes
+
 ################
 #Define structural equations
 import numpy as np
@@ -118,14 +133,11 @@ def logistic_function(x):
     """Logistic function to ensure values are between 0 and 1."""
     return 1 / (1 + np.exp(-x))
 
-def generate_gene_expression(parent_expressions):
-    """Generate gene expression level based on expressions of parent genes.
-    Assuming parent_expressions is a list of expression levels of parent genes."""
-    weight = 0.1  # This could be adjusted or made more complex
-    x = sum(parent_expressions) * weight
-    return logistic_function(x)
-
-
+def generate_gene_expression(parent_expressions, weights, bias, confounder_bias):
+    """Generate gene expression level based on expressions of parent genes."""
+    random_noise = np.random.normal(-0.04, 0.08)
+    x = logistic_function(np.dot(weights, parent_expressions) + bias + confounder_bias)
+    return np.clip(x + random_noise, 0, 1)
 
 ######################
 #Simulate observational and interventional data 
@@ -144,33 +156,149 @@ def get_parents_for_each_node(dag):
     return parents_dict
 
 
-def simulate_observational_data(dag, num_samples):
-    """Simulate observational data for all genes in the DAG.
-    dag should be a structure that allows you to know the parents of each node."""
-    # Initialize expressions for all genes in the DAG
-    gene_expressions = np.zeros((num_samples, len(dag)))
-    for i in range(len(dag)):
-        parents = dag[i]  # Get parents of gene i
+def generate_weights_and_biases(parents_dict):
+    weights = {}
+    biases = {}
+    for node, parents in parents_dict.items():
+        if parents:
+            # Assign random weights and biases for each gene with parents
+            weights[node] = np.random.normal(0.06, 0.20, size=len(parents))
+            biases[node] = np.random.uniform(-0.05, 0.2)
+        else:
+            # For genes with no parents, weights are empty and bias is set
+            weights[node] = np.array([])
+            biases[node] = np.random.uniform(-0.05, 0.2)
+    return weights, biases
+
+def generate_confounder_biases(parents_dict, confounder_probability=0.2, mean=0.0, std=0.1):
+    """
+    Generate confounder biases for a subset of nodes in the parents_dict.
+    Args:
+    - parents_dict: A dictionary where keys are node indices and values are lists of parent nodes.
+    - confounder_probability: The probability of assigning a confounder bias to a node.
+    - mean: The mean of the normal distribution for generating biases.
+    - std: The standard deviation of the normal distribution for generating biases.
+    Returns:
+    - confounder_biases: A dictionary where keys are node indices and values are confounder biases.
+    """
+    confounder_biases = {}
+    for node in parents_dict.keys():
+        if np.random.rand() < confounder_probability:
+            confounder_biases[node] = np.random.normal(mean, std)
+        else:
+            confounder_biases[node] = 0.0
+    return confounder_biases
+
+
+def simulate_observational_data(parents_dict, num_samples, weights, biases, confounder_biases):
+    """Simulate observational data for all genes based on parents_dict."""
+    num_genes = len(parents_dict)
+    gene_expressions = np.zeros((num_samples, num_genes))
+    for i in range(num_genes):
+        parents = parents_dict[i]
         for sample in range(num_samples):
             if parents:
                 parent_expressions = gene_expressions[sample, parents]
-                gene_expressions[sample, i] = generate_gene_expression(parent_expressions)
+                gene_expressions[sample, i] = generate_gene_expression(parent_expressions, weights[i], biases[i], confounder_biases[i])
             else:
                 # If no parents, generate an initial expression level randomly
-                gene_expressions[sample, i] = np.random.rand()  #values in [0, 1)
+                gene_expressions[sample, i] = np.random.uniform(0.4, 0.8)  # Initial value
     return gene_expressions
 
 
-def intervene_on_gene(dag, gene_index, intervention_value, num_samples):
+
+
+
+def intervene_on_gene(observational_data, parents_dict, gene_indices, intervention_values, weights, biases):
     """Simulate interventional data by setting the expression of a gene to an arbitrary value and observing downstream effects."""
     # Start with observational data as the base
-    gene_expressions = simulate_observational_data(dag, num_samples)
-    # Intervene on the specified gene
-    gene_expressions[:, gene_index] = intervention_value
-    # Propagate the intervention effects downstream
-    for i in range(gene_index + 1, len(dag)):
-        parents = dag[i]
-        for sample in range(num_samples):
-            parent_expressions = gene_expressions[sample, parents]
-            gene_expressions[sample, i] = generate_gene_expression(parent_expressions)
-    return gene_expressions
+    num_samples = observational_data.shape[0]
+    for gene_index, intervention_value in zip(gene_indices, intervention_values):
+    # Intervene on the specified genes
+        observational_data[:, gene_index] = intervention_value
+        # Propagate the intervention effects downstream
+        for i in range(gene_index + 1, len(parents_dict)):
+            if i in gene_indices:
+                continue #do not recompute for other genes that have been intervened on
+            parents = parents_dict[i]
+            for sample in range(num_samples):
+                parent_expressions = observational_data[sample, parents]
+                observational_data[sample, i] = generate_gene_expression(parent_expressions, weights[i], biases[i])
+    return observational_data
+
+
+
+
+
+####Functions to create synthetic manipulated data
+#These are to be tested
+
+#Remove random edges
+def remove_random_edges(dag, remove_fraction=0.1):
+    """
+    Remove a fraction of edges randomly from the DAG.
+    
+    Args:
+    - dag: A directed NetworkX graph representing the DAG.
+    - remove_fraction: A float representing the fraction of edges to remove.
+    
+    Returns:
+    - modified_dag: A new directed NetworkX graph with specified edges removed.
+    """
+    num_edges = dag.number_of_edges()
+    num_remove = int(remove_fraction * num_edges)
+    edges_to_remove = np.random.choice(dag.edges(), num_remove, replace=False)
+
+    modified_dag = dag.copy()
+    modified_dag.remove_edges_from(edges_to_remove)
+    
+    return modified_dag
+
+# Example usage:
+# dag_with_random_edges_removed = remove_random_edges(dag, remove_fraction=0.1)
+
+#High betweeness centrality edge removal
+def remove_high_betweenness_edges(dag, fraction=0.1):
+    """
+    Remove a fraction of edges with the highest betweenness centrality from the DAG.
+    
+    Args:
+    - dag: A directed NetworkX graph representing the DAG.
+    - fraction: A float representing the fraction of edges to remove.
+    
+    Returns:
+    - modified_dag: A new directed NetworkX graph with high betweenness centrality edges removed.
+    """
+    edge_betweenness = nx.edge_betweenness_centrality(dag)
+    sorted_edges = sorted(edge_betweenness.items(), key=lambda x: x[1], reverse=True)
+    num_remove = int(fraction * len(sorted_edges))
+    edges_to_remove = [edge for edge, _ in sorted_edges[:num_remove]]
+
+    modified_dag = dag.copy()
+    modified_dag.remove_edges_from(edges_to_remove)
+    
+    return modified_dag
+
+# Example usage:
+# dag_with_high_betweenness_edges_removed = remove_high_betweenness_edges(dag, fraction=0.1)
+
+#Bridge edge removal
+def remove_bridge_edges(dag, fraction=0.1):
+    """
+    Remove a fraction of bridge edges (edges crucial for connectivity) from the DAG.
+    Args:
+    - dag: A directed NetworkX graph representing the DAG.
+    - fraction: A float representing the fraction of bridge edges to remove.
+    Returns:
+    - modified_dag: A new directed NetworkX graph with specified bridge edges removed.
+    """
+    bridges = list(nx.bridges(dag.to_undirected()))
+    num_remove = int(fraction * len(bridges))
+    edges_to_remove = np.random.choice(range(len(bridges)), num_remove, replace=False)
+    edges_to_remove = [bridges[e] for e in edges_to_remove]
+    modified_dag = dag.copy()
+    modified_dag.remove_edges_from(edges_to_remove)
+    return modified_dag
+
+# Example usage:
+# dag_with_bridge_edges_removed = remove_bridge_edges(dag, fraction=0.1)
