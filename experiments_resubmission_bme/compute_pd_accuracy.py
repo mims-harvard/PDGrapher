@@ -103,12 +103,12 @@ for cell_line in cell_lines:
         n_layers_gnn = int(path.split('/')[-1].split('_')[2])
 
 
-        all_recall_at_1 = []
-        all_recall_at_10 = []
-        all_recall_at_100 = []
-        all_recall_at_1000 = []
-        all_perc_partially_accurate_predictions = []
-        all_rankings = []
+        all_recall_at_1 = {'test':[], 'val':[]}
+        all_recall_at_10 = {'test':[], 'val':[]}
+        all_recall_at_100 = {'test':[], 'val':[]}
+        all_recall_at_1000 = {'test':[], 'val':[]}
+        all_perc_partially_accurate_predictions = {'test':[], 'val':[]}
+        all_rankings = {'test':[], 'val':[]}
 
 
 
@@ -187,33 +187,99 @@ for cell_line in cell_lines:
                     n_non_zeros += 1
 
 
-            all_recall_at_1.append(np.mean(recall_at_1))
-            all_recall_at_10.append(np.mean(recall_at_10))
-            all_recall_at_100.append(np.mean(recall_at_100))
-            all_recall_at_1000.append(np.mean(recall_at_1000))
-            all_rankings.append(np.mean(rankings))
-            all_perc_partially_accurate_predictions.append(100 * n_non_zeros/len(test_loader_backward))
+            all_recall_at_1['test'].append(np.mean(recall_at_1))
+            all_recall_at_10['test'].append(np.mean(recall_at_10))
+            all_recall_at_100['test'].append(np.mean(recall_at_100))
+            all_recall_at_1000['test'].append(np.mean(recall_at_1000))
+            all_rankings['test'].append(np.mean(rankings))
+            all_perc_partially_accurate_predictions['test'].append(100 * n_non_zeros/len(test_loader_backward))
             print('fold {}/5'.format(fold))
 
 
 
 
+            ####VALIDATION SET
+            recall_at_1 = []
+            recall_at_10 = []
+            recall_at_100 = []
+            recall_at_1000 = []
+            perc_partially_accurate_predictions = []
+            rankings = []
+            n_non_zeros = 0
+            
+            
+            for data in val_loader_backward:
+                pred_backward_m2 = model.perturbation_discovery(torch.concat([data.diseased.view(-1, 1).to(device), data.treated.view(-1, 1).to(device)], 1), data.batch.to(device), mutilate_mutations=data.mutations.to(device), threshold_input=thresholds)
+                out = pred_backward_m2
+                                
+                num_nodes = int(data.num_nodes / len(torch.unique(data.batch)))
+                
+                
+                correct_interventions = set(torch.where(data.intervention.detach().cpu().view(-1, num_nodes))[1].tolist())
+                predicted_interventions = torch.argsort(out.detach().cpu().view(-1, num_nodes), descending=True)[0, :].tolist()
+
+                for ci in list(correct_interventions):
+                    rankings.append(1 - (predicted_interventions.index(ci) / num_nodes))
+                
+                recall_at_1.append(len(set(predicted_interventions[:1]).intersection(correct_interventions)) / len(correct_interventions))
+                recall_at_10.append(len(set(predicted_interventions[:10]).intersection(correct_interventions)) / len(correct_interventions))
+                recall_at_100.append(len(set(predicted_interventions[:100]).intersection(correct_interventions)) / len(correct_interventions))
+                recall_at_1000.append(len(set(predicted_interventions[:1000]).intersection(correct_interventions)) / len(correct_interventions))
+
+
+                jaccards = len(correct_interventions.intersection(predicted_interventions[:len(correct_interventions)])) / len(correct_interventions.union(predicted_interventions))
+
+                if jaccards != 0:
+                    n_non_zeros += 1
+
+
+            all_recall_at_1['val'].append(np.mean(recall_at_1))
+            all_recall_at_10['val'].append(np.mean(recall_at_10))
+            all_recall_at_100['val'].append(np.mean(recall_at_100))
+            all_recall_at_1000['val'].append(np.mean(recall_at_1000))
+            all_rankings['val'].append(np.mean(rankings))
+            all_perc_partially_accurate_predictions['val'].append(100 * n_non_zeros/len(test_loader_backward))
+            print('fold {}/5'.format(fold))
+
+
+
+
+
         log = open(osp.join(outdir, 'final_performance_metrics.txt'), 'w')
-        log.write('recall@1: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1), np.std(all_recall_at_1)))
-        log.write('recall@10: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_10), np.std(all_recall_at_10)))
-        log.write('recall@100: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_100), np.std(all_recall_at_100)))
-        log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000), np.std(all_recall_at_1000)))
-        log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions), np.std(all_perc_partially_accurate_predictions)))
-        log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings), np.std(all_rankings)))
+        log.write('\n\nVALIDATION SET\n')
+        log.write('recall@1: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1['val']), np.std(all_recall_at_1['val'])))
+        log.write('recall@10: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_10['val']), np.std(all_recall_at_10['val'])))
+        log.write('recall@100: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_100['val']), np.std(all_recall_at_100['val'])))
+        log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000['val']), np.std(all_recall_at_1000['val'])))
+        log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions['val']), np.std(all_perc_partially_accurate_predictions['val'])))
+        log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings['val']), np.std(all_rankings['val'])))
 
         log.write('--------------------------\n')
         log.write('All metric datapoints:\n')
-        log.write('recall@1: {}\n'.format(all_recall_at_1))
-        log.write('recall@10: {}\n'.format(all_recall_at_10))
-        log.write('recall@100: {}\n'.format(all_recall_at_100))
-        log.write('recall@1000: {}\n'.format(all_recall_at_1000))
-        log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions))
-        log.write('ranking score: {}\n'.format(all_rankings))
+        log.write('recall@1: {}\n'.format(all_recall_at_1['val']))
+        log.write('recall@10: {}\n'.format(all_recall_at_10['val']))
+        log.write('recall@100: {}\n'.format(all_recall_at_100['val']))
+        log.write('recall@1000: {}\n'.format(all_recall_at_1000['val']))
+        log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions['val']))
+        log.write('ranking score: {}\n'.format(all_rankings['val']))
+
+        log.write('\n\n----------------------\n')
+        log.write('\n\nTEST SET\n')
+        log.write('recall@1: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1['test']), np.std(all_recall_at_1['test'])))
+        log.write('recall@10: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_10['test']), np.std(all_recall_at_10['test'])))
+        log.write('recall@100: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_100['test']), np.std(all_recall_at_100['test'])))
+        log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000['test']), np.std(all_recall_at_1000['test'])))
+        log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions['test']), np.std(all_perc_partially_accurate_predictions['test'])))
+        log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings['test']), np.std(all_rankings['test'])))
+
+        log.write('--------------------------\n')
+        log.write('All metric datapoints:\n')
+        log.write('recall@1: {}\n'.format(all_recall_at_1['test']))
+        log.write('recall@10: {}\n'.format(all_recall_at_10['test']))
+        log.write('recall@100: {}\n'.format(all_recall_at_100['test']))
+        log.write('recall@1000: {}\n'.format(all_recall_at_1000['test']))
+        log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions['test']))
+        log.write('ranking score: {}\n'.format(all_rankings['test']))
 
         log.close()
 
