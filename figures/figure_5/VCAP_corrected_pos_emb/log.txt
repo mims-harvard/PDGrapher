@@ -1,0 +1,40 @@
+Mutated genes in this cancer type: {'MSH6', 'NCOR2'}
+
+Comparing recall of recovering targets of approved drugs not in training set vs random
+K: [1, 10, 20, 30, 50, 100, 200, 300, 400, 500, 1000]
+Recall (Approved): [0.0, 0.0, 0.125, 0.25, 0.25, 0.75, 0.75, 0.875, 0.875, 0.875, 0.875]
+Recall (Random): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+Comparing recall of recovering targets of approved drugs not in training set vs random (additionally, only considering the targets that are not in the training set!)
+Not possible because there are no targets of approved drugs that are not in training set (all targets of approved drugs are in training set)
+
+Comparing recall of recovering targets perturbed in the dataset which are not targets of approved drugs in training set vs random
+K: [1, 10, 20, 30, 50, 100, 200, 300, 400, 500, 1000]
+Recall (Perturbed not approved): [0.0014, 0.0144, 0.0274, 0.0404, 0.0693, 0.1356, 0.2742, 0.3896, 0.4603, 0.5051, 0.5931]
+Recall (Random): [0.0, 0.0, 0.0014, 0.0029, 0.0029, 0.0072, 0.0202, 0.0289, 0.0361, 0.0433, 0.0909]
+
+
+USE CASES:
+Of the top 10 predicted genes, these ones are targets of approved drugs not in the training set: []
+The approved drugs (not in training) that have at least one of those genes as targets are: {}
+--
+
+USE CASES:
+Of the top 20 predicted genes, these ones are targets of approved drugs not in the training set: ['AR']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'apalutamide': ['AR', 'GABRA1'], 'darolutamide': ['AR', 'PGR']}
+--
+
+USE CASES:
+Of the top 30 predicted genes, these ones are targets of approved drugs not in the training set: ['AR', 'PARP1']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'apalutamide': ['AR', 'GABRA1'], 'talazoparib': ['PARP1', 'PARP2'], 'darolutamide': ['AR', 'PGR']}
+--
+
+USE CASES:
+Of the top 50 predicted genes, these ones are targets of approved drugs not in the training set: ['AR', 'PARP1']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'apalutamide': ['AR', 'GABRA1'], 'talazoparib': ['PARP1', 'PARP2'], 'darolutamide': ['AR', 'PGR']}
+--
+
+USE CASES:
+Of the top 100 predicted genes, these ones are targets of approved drugs not in the training set: ['TUBA4A', 'PGR', 'GABRA1', 'AR', 'PARP2', 'PARP1']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'apalutamide': ['AR', 'GABRA1'], 'talazoparib': ['PARP1', 'PARP2'], 'cabazitaxel': ['TUBA4A', 'TUBB1'], 'darolutamide': ['AR', 'PGR']}
+--

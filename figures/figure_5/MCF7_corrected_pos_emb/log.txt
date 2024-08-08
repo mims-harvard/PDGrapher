@@ -1,0 +1,42 @@
+Mutated genes in this cancer type: {'ASPM', 'PAX5', 'DNM2', 'FLT3', 'MAP3K13', 'PIK3CA', 'GATA3', 'EP300', 'LATS1'}
+
+Comparing recall of recovering targets of approved drugs not in training set vs random
+K: [1, 10, 20, 30, 50, 100, 200, 300, 400, 500, 1000]
+Recall (Approved): [0.0, 0.0, 0.1667, 0.1667, 0.1667, 0.3333, 0.5, 0.5, 0.5, 0.5, 0.6667]
+Recall (Random): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+Comparing recall of recovering targets of approved drugs not in training set vs random (additionally, only considering the targets that are not in the training set!)
+K: [1, 10, 20, 30, 50, 100, 200, 300, 400, 500, 1000]
+Recall (Approved): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5]
+Recall (Random): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+Comparing recall of recovering targets perturbed in the dataset which are not targets of approved drugs in training set vs random
+K: [1, 10, 20, 30, 50, 100, 200, 300, 400, 500, 1000]
+Recall (Perturbed not approved): [0.0011, 0.0113, 0.0215, 0.0329, 0.0556, 0.1111, 0.2143, 0.2902, 0.3379, 0.381, 0.5034]
+Recall (Random): [0.0011, 0.0011, 0.0011, 0.0011, 0.0023, 0.0079, 0.0147, 0.0227, 0.0329, 0.0385, 0.0862]
+
+
+USE CASES:
+Of the top 10 predicted genes, these ones are targets of approved drugs not in the training set: []
+The approved drugs (not in training) that have at least one of those genes as targets are: {}
+--
+
+USE CASES:
+Of the top 20 predicted genes, these ones are targets of approved drugs not in the training set: ['CDK4']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'ribociclib': ['CDK4', 'CDK6'], 'abemaciclib': ['CDK4', 'CDK6']}
+--
+
+USE CASES:
+Of the top 30 predicted genes, these ones are targets of approved drugs not in the training set: ['CDK4']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'ribociclib': ['CDK4', 'CDK6'], 'abemaciclib': ['CDK4', 'CDK6']}
+--
+
+USE CASES:
+Of the top 50 predicted genes, these ones are targets of approved drugs not in the training set: ['CDK4']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'ribociclib': ['CDK4', 'CDK6'], 'abemaciclib': ['CDK4', 'CDK6']}
+--
+
+USE CASES:
+Of the top 100 predicted genes, these ones are targets of approved drugs not in the training set: ['CDK6', 'CDK4']
+The approved drugs (not in training) that have at least one of those genes as targets are: {'ribociclib': ['CDK4', 'CDK6'], 'abemaciclib': ['CDK4', 'CDK6']}
+--
