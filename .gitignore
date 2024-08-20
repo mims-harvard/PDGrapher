@@ -170,3 +170,7 @@ data/
 
 tests/PDGrapher_test/*
 !tests/PDGrapher_test/.keep
+
+
+#jobs scripts
+job_*
