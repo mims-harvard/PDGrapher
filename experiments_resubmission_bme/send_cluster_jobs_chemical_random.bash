@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Define the cell lines array
-cell_lines=("A549" "A375" "BT20" "HA1E" "HELA" "HT29" "MCF7" "MDAMB231" "PC3" "VCAP")
+# cell_lines=("A549" "A375" "BT20" "HA1E" "HELA" "HT29" "MCF7" "MDAMB231" "PC3" "VCAP")
+cell_lines=("A549" "BT20" "MCF7" "MDAMB231" "PC3" "VCAP")
 
 
 # Iterate over each cell line
@@ -16,7 +17,7 @@ do
 #BSUB -e logs_shpc/output-${cell_line}-%J.err    # Error file
 #BSUB -M 5G                              # memory in MB
 #BSUB -N                                 # send output by email 
-#BSUB -W 72:00                            # Job timelimit
+#BSUB -W 90:00                            # Job timelimit
 #BSUB -gpu "num=1:j_exclusive=yes"     # Request 1 GPU exclusive
 
 

@@ -1,6 +1,8 @@
 
 
-
+import scipy
+import scipy.spatial
+from pdgrapher import Dataset, PDGrapher, Trainer
 import torch
 import pandas as pd
 import sys
@@ -93,9 +95,27 @@ for cell_line in cell_lines:
         #Modify based on folder name
         paths = glob('results/genetic/{}/*'.format(cell_line))  
 
+    elif data_type == 'synthetic_missing_components':
+        use_forward_data = False
 
+        #Dataset
+        dataset = Dataset(
+            forward_path=None,
+            backward_path="../data/processed/synthetic/data_missing_components/data_backward_synthetic.pt",
+            splits_path="../data/processed/splits/synthetic/missing_components/random/5fold/splits.pt"
+        )
+
+        
+
+        #Modify based on folder name
+        paths = glob('results/synthetic/data_missing_components/*/*')  
 
     for path in paths:
+        
+        if data_type == 'synthetic_missing_components':
+            fraction = path.split('/')[-2].split('_')[1]
+            edge_index = torch.load(f"../data/processed/synthetic/data_missing_components/edge_index_synthetic_bridge_removed_frac_{fraction}.pt")
+
 
         outdir = path
         path_model = path

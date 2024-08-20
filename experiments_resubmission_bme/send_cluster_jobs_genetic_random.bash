@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Define the cell lines array
-cell_lines=("A549" "A375" "AGS" "BICR6" "ES2" "HT29" "MCF7" "PC3" "U251MG" "YAPC")
+# cell_lines=("A549" "A375" "AGS" "BICR6" "ES2" "HT29" "MCF7" "PC3" "U251MG" "YAPC")
+
+cell_lines=("A549" "MCF7" "PC3")
 
 
 # Iterate over each cell line
@@ -9,12 +11,13 @@ for cell_line in "${cell_lines[@]}"
 do
   # Create a job submission script for each cell line
   echo "#!/bin/bash
-#BSUB -J build_sciplex_1_${cell_line}    # Job name
+#BSUB -J genetic_${cell_line}    # Job name
 #BSUB -n 20                              # number of processors
 #BSUB -q long                            # Select queue
 #BSUB -o logs_shpc/output-${cell_line}-%J.out    # Output file
 #BSUB -e logs_shpc/output-${cell_line}-%J.err    # Error file
 #BSUB -M 5G                              # memory in MB
+#BSUB -u gonzalez.guadalupe@gene.com                        # Email address for notifications
 #BSUB -N                                 # send output by email 
 #BSUB -W 72:00                            # Job timelimit
 #BSUB -gpu "num=1:j_exclusive=yes"     # Request 1 GPU exclusive

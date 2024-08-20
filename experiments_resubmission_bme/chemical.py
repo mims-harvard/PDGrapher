@@ -1,5 +1,7 @@
 
-
+import scipy
+import scipy.spatial
+from pdgrapher import Dataset, PDGrapher, Trainer
 import numpy as np
 import torch
 
@@ -14,7 +16,7 @@ import sys
 cell_line = sys.argv[1]  # Get the cell line from command line arguments
 n_layers_nn = 1
 global use_forward_data
-use_forward_data = True
+use_forward_data = False
 if cell_line in ['HA1E', 'HT29', 'A375', 'HELA']:
     use_forward_data = False
 
@@ -28,7 +30,7 @@ def main():
     """ torch.set_num_threads(4)
     torch.manual_seed(0)
     np.random.seed(0) """
-    outdir = f'./results/chemical/{cell_line}_corrected_pos_emb'
+    outdir = f'./results/chemical/{cell_line}_corrected_pos_emb_no_forward'
     os.makedirs(outdir, exist_ok=True)
 
 

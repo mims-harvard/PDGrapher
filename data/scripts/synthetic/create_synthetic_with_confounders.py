@@ -135,7 +135,8 @@ def logistic_function(x):
 
 def generate_gene_expression(parent_expressions, weights, bias, confounder_bias):
     """Generate gene expression level based on expressions of parent genes."""
-    random_noise = np.random.normal(-0.04, 0.08)
+    # random_noise = np.random.normal(-0.04, 0.08)
+    random_noise = np.random.normal(-0.04, 0.15)
     x = logistic_function(np.dot(weights, parent_expressions) + bias + confounder_bias)
     return np.clip(x + random_noise, 0, 1)
 
@@ -209,22 +210,26 @@ def simulate_observational_data(parents_dict, num_samples, weights, biases, conf
 
 
 
-def intervene_on_gene(observational_data, parents_dict, gene_indices, intervention_values, weights, biases):
+def intervene_on_gene(observational_data, parents_dict, gene_indices, intervention_values, weights, biases, confounder_biases):
     """Simulate interventional data by setting the expression of a gene to an arbitrary value and observing downstream effects."""
+    interventional_data = observational_data.copy()
     # Start with observational data as the base
-    num_samples = observational_data.shape[0]
+    num_samples = interventional_data.shape[0]
     for gene_index, intervention_value in zip(gene_indices, intervention_values):
     # Intervene on the specified genes
-        observational_data[:, gene_index] = intervention_value
-        # Propagate the intervention effects downstream
-        for i in range(gene_index + 1, len(parents_dict)):
-            if i in gene_indices:
-                continue #do not recompute for other genes that have been intervened on
-            parents = parents_dict[i]
+        interventional_data[:, gene_index] = intervention_value
+    # Propagate the intervention effects downstream 
+    # This re-computes gene expression for all genes to add noise variability to nodes upstream of perturbed nodes, 
+    # and to update gene expression accounting for new parents' values for those genes whose parents were perturbed
+    for i in range(0, len(parents_dict)):   #for each gene
+        if i in gene_indices:
+            continue #do not recompute for other genes that have been intervened on
+        parents = parents_dict[i]
+        if len(parents)>0:
             for sample in range(num_samples):
-                parent_expressions = observational_data[sample, parents]
-                observational_data[sample, i] = generate_gene_expression(parent_expressions, weights[i], biases[i])
-    return observational_data
+                parent_expressions = interventional_data[sample, parents]
+                interventional_data[sample, i] = generate_gene_expression(parent_expressions, weights[i], biases[i], confounder_biases[i])
+    return interventional_data
 
 
 
@@ -234,20 +239,21 @@ def intervene_on_gene(observational_data, parents_dict, gene_indices, interventi
 #These are to be tested
 
 #Remove random edges
-def remove_random_edges(dag, remove_fraction=0.1):
+def remove_random_edges(dag, fraction=0.1):
     """
     Remove a fraction of edges randomly from the DAG.
     
     Args:
     - dag: A directed NetworkX graph representing the DAG.
-    - remove_fraction: A float representing the fraction of edges to remove.
+    - fraction: A float representing the fraction of edges to remove.
     
     Returns:
     - modified_dag: A new directed NetworkX graph with specified edges removed.
     """
     num_edges = dag.number_of_edges()
-    num_remove = int(remove_fraction * num_edges)
-    edges_to_remove = np.random.choice(dag.edges(), num_remove, replace=False)
+    num_remove = int(fraction * num_edges)
+    edge_indices_to_remove = np.random.choice(range(dag.number_of_edges()), num_remove, replace=False)
+    edges_to_remove = np.array(list(dag.edges()))[edge_indices_to_remove].tolist()
 
     modified_dag = dag.copy()
     modified_dag.remove_edges_from(edges_to_remove)
@@ -255,7 +261,7 @@ def remove_random_edges(dag, remove_fraction=0.1):
     return modified_dag
 
 # Example usage:
-# dag_with_random_edges_removed = remove_random_edges(dag, remove_fraction=0.1)
+# dag_with_random_edges_removed = remove_random_edges(dag, fraction=0.1)
 
 #High betweeness centrality edge removal
 def remove_high_betweenness_edges(dag, fraction=0.1):

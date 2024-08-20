@@ -1,5 +1,7 @@
 
-
+import scipy
+import scipy.spatial
+from pdgrapher import Dataset, PDGrapher, Trainer
 import numpy as np
 import torch
 
@@ -8,15 +10,18 @@ import os.path as osp
 torch.set_num_threads(20)
 from datetime import datetime
 from pdgrapher import Dataset, PDGrapher, Trainer
-
+import sys
 
 #PARAMS
 cell_line = sys.argv[1]  # Get the cell line from command line arguments
 n_layers_nn = 1
+
 global use_forward_data
-use_forward_data = True
+
+use_forward_data = False
 if cell_line in ['ES2', 'BICR6', 'YAPC', 'AGS', 'U251MG', 'HT29', 'A375']:
         use_forward_data = False
+        
 use_backward_data = True
 use_supervision = True #whether to use supervision loss
 use_intervention_data = True #whether to use cycle loss
@@ -27,7 +32,7 @@ def main():
     """ torch.set_num_threads(4)
     torch.manual_seed(0)
     np.random.seed(0) """
-    outdir = f'./results/genetic/{cell_line}_corrected_pos_emb''
+    outdir = f'./results/genetic/{cell_line}_corrected_pos_emb_no_forward'
     os.makedirs(outdir, exist_ok=True)
 
     for n_layers_gnn in [1, 2, 3]:

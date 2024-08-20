@@ -13,7 +13,11 @@ class Dataset:
 
     def __init__(self, forward_path: str, backward_path: str, splits_path: str,
                  test_indices: bool = True):
-        self.dataset_forward = torch.load(forward_path)
+        if forward_path is not None:
+            self.dataset_forward = torch.load(forward_path)
+        else:
+            self.dataset_forward = []
+            
         self.dataset_backward = torch.load(backward_path)
 
         self.splits = torch.load(splits_path)
@@ -78,8 +82,8 @@ class Dataset:
         _test_condition(not any(x in set_teib for x in set_trib), "Overlap between train and test indices should be zero (backward)")
         _test_condition(not any(x in set_teib for x in set_vib), "Overlap between validation and test indices should be zero (backward)")
 
-    def get_dataloaders(self, batch_size: int = 64, **kwargs) -> List[DataLoader]:
-        kwargs = {**{"shuffle": True, "drop_last": True}, **kwargs} # default kwargs
+    def get_dataloaders(self, batch_size: int = 64, shuffle = True, **kwargs) -> List[DataLoader]:
+        kwargs = {**{"shuffle": shuffle, "drop_last": True}, **kwargs} # default kwargs
         return [
             DataLoader(self.train_dataset_forward, batch_size=batch_size, **kwargs) if hasattr(self, 'train_dataset_forward') else None,
             DataLoader(self.train_dataset_backward, batch_size=batch_size, **kwargs),
