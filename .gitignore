@@ -174,3 +174,8 @@ tests/PDGrapher_test/*
 
 #jobs scripts
 job_*
+
+
+#large files
+*ours_to_real.txt
+*random_to_real.txt

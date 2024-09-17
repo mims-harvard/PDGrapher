@@ -204,7 +204,7 @@ palette = {
 }
 
 
-import pdb; pdb.set_trace()
+
 with sns.plotting_context(plotting_context):
     # Plotting with Seaborn
     fig, ax = plt.subplots(figsize=(7.35, 3.4))
@@ -218,13 +218,13 @@ with sns.plotting_context(plotting_context):
     # Ensure the legend is correctly formatted without duplication
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[:len(methods)], labels[:len(methods)], loc='upper right', frameon=False, title=None)
-    plt.legend(frameon=False, title=None, bbox_to_anchor=(1.2, 1))
+    plt.legend(frameon=False, title=None, bbox_to_anchor=(0.3, 1))
     # Formatting the plot
     plt.xlabel('K (Number of top predicted genes considered)')
     plt.ylabel('Average recall across cell lines')
     plt.grid(False)
     sns.despine()
-    plt.subplots_adjust(left=0.1, right=0.85, top=0.9, bottom=0.15)
+    plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.16)
     # Show the plot
     plt.savefig(osp.join(outdir, 'recall_targets_approved_drugs.pdf'))
     plt.close()
@@ -236,76 +236,76 @@ with sns.plotting_context(plotting_context):
     
     
     
-##################################################################################################
-##Panel recall vs K for a single cell line - highlighting the points where recall drug targets != 0 
-##################################################################################################
+# ##################################################################################################
+# ##Panel recall vs K for a single cell line - highlighting the points where recall drug targets != 0 
+# ##################################################################################################
 
-for cell_line in cell_lines:
+# for cell_line in cell_lines:
         
-    #Outdir
-    outdir = cell_line + '_corrected_pos_emb'
-    os.makedirs(outdir, exist_ok = True)
+#     #Outdir
+#     outdir = cell_line + '_corrected_pos_emb'
+#     os.makedirs(outdir, exist_ok = True)
 
 
-    specific_K_values = [1, 10, 20, 30, 40, 50, 100, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
+#     specific_K_values = [1, 10, 20, 30, 40, 50, 100, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
 
 
-    # Convert to DataFrame for Seaborn
-    df = pd.DataFrame(recall_dict[cell_line]['PDGrapher'], columns=['K', 'Average Recall'])
-    df = df[[e in specific_K_values for e in df['K']]]
+#     # Convert to DataFrame for Seaborn
+#     df = pd.DataFrame(recall_dict[cell_line]['PDGrapher'], columns=['K', 'Average Recall'])
+#     df = df[[e in specific_K_values for e in df['K']]]
 
 
 
-    # Create a dictionary to aggregate drugs by their x position (k value)
-    # Create a dictionary to aggregate drugs by their x position (k value)
-    highlight_dict = defaultdict(list)
-    for drug, k, recall in highlight_points_dict[cell_line]:
-        highlight_dict[k].append(drug.capitalize())
+#     # Create a dictionary to aggregate drugs by their x position (k value)
+#     # Create a dictionary to aggregate drugs by their x position (k value)
+#     highlight_dict = defaultdict(list)
+#     for drug, k, recall in highlight_points_dict[cell_line]:
+#         highlight_dict[k].append(drug.capitalize())
             
             
-    # Define a list of colors that match the aesthetic of your figures
-    color_list = [
-        '#04C4D9',   # Cyan-like blue
-        '#F28E2B',   # Orange
-        '#E15759',   # Red
-        '#76B7B2',   # Teal
-        '#59A14F',   # Green
-        '#EDC948',   # Yellow
-        '#B07AA1',   # Purple
-        '#FF9DA7',   # Pinkish Red
-        '#9C755F',   # Brown
-        '#BAB0AC',   # Gray
-        '#4E79A7',    # Dark Blue
-        '#2B7A0B',
-        '#FFA07A'
-    ]
+#     # Define a list of colors that match the aesthetic of your figures
+#     color_list = [
+#         '#04C4D9',   # Cyan-like blue
+#         '#F28E2B',   # Orange
+#         '#E15759',   # Red
+#         '#76B7B2',   # Teal
+#         '#59A14F',   # Green
+#         '#EDC948',   # Yellow
+#         '#B07AA1',   # Purple
+#         '#FF9DA7',   # Pinkish Red
+#         '#9C755F',   # Brown
+#         '#BAB0AC',   # Gray
+#         '#4E79A7',    # Dark Blue
+#         '#2B7A0B',
+#         '#FFA07A'
+#     ]
 
-    # Generate a dynamic color palette based on the highlight_dict keys
-    color_palette = {k: color_list[i % len(color_list)] for i, k in enumerate(highlight_dict.keys())}
-
-
+#     # Generate a dynamic color palette based on the highlight_dict keys
+#     color_palette = {k: color_list[i % len(color_list)] for i, k in enumerate(highlight_dict.keys())}
 
 
-    with sns.plotting_context(plotting_context):
-        # Plot using Seaborn
-        plt.figure(figsize=(7.35, 3.4))
-        sns.lineplot(data=df, x='K', y='Average Recall', color='#04C4D9', marker='')
-        # Plotting
-        for k, drugs in highlight_dict.items():
-            label = ',\n'.join(drugs)
-            color = color_palette.get(k, '#000000')  # Default to black if k not in palette
-            plt.axvline(x=k, color=color, linestyle='--', label=label)
-        # Plotting details
-        sns.despine()
-        plt.xlabel('K (Number of top predicted genes considered)')
-        plt.ylabel('Average recall across approved drugs')
-        plt.title('')
-        plt.legend(loc='best', frameon=False, title=None, bbox_to_anchor=(1.2, 1))
-        plt.grid(False)
-        plt.subplots_adjust(left=0.08, right=0.8, top=0.9, bottom=0.1)
-        plt.savefig(osp.join(outdir, 'cumulative_recovery_alldrugs_nonzero_overlap.pdf'))
-        plt.close()
-        plt.close()
+
+
+#     with sns.plotting_context(plotting_context):
+#         # Plot using Seaborn
+#         plt.figure(figsize=(7.35, 3.4))
+#         sns.lineplot(data=df, x='K', y='Average Recall', color='#04C4D9', marker='')
+#         # Plotting
+#         for k, drugs in highlight_dict.items():
+#             label = ',\n'.join(drugs)
+#             color = color_palette.get(k, '#000000')  # Default to black if k not in palette
+#             plt.axvline(x=k, color=color, linestyle='--', label=label)
+#         # Plotting details
+#         sns.despine()
+#         plt.xlabel('K (Number of top predicted genes considered)')
+#         plt.ylabel('Average recall across approved drugs')
+#         plt.title('')
+#         plt.legend(loc='best', frameon=False, title=None, bbox_to_anchor=(1.2, 1))
+#         plt.grid(False)
+#         plt.subplots_adjust(left=0.08, right=0.8, top=0.9, bottom=0.1)
+#         plt.savefig(osp.join(outdir, 'cumulative_recovery_alldrugs_nonzero_overlap.pdf'))
+#         plt.close()
+#         plt.close()
         
         
         
@@ -315,71 +315,71 @@ for cell_line in cell_lines:
     
     
 
-##################################################################################################
-##Panel recall vs K for a single cell line - highlighting the points where recall drug targets == 1 
-##################################################################################################
-for cell_line in cell_lines:
-    #Outdir
-    outdir = cell_line + '_corrected_pos_emb'
-    os.makedirs(outdir, exist_ok = True)
+# ##################################################################################################
+# ##Panel recall vs K for a single cell line - highlighting the points where recall drug targets == 1 
+# ##################################################################################################
+# for cell_line in cell_lines:
+#     #Outdir
+#     outdir = cell_line + '_corrected_pos_emb'
+#     os.makedirs(outdir, exist_ok = True)
 
 
-    specific_K_values = [1, 10, 20, 30, 40, 50, 100, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
+#     specific_K_values = [1, 10, 20, 30, 40, 50, 100, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
 
 
-    # Convert to DataFrame for Seaborn
-    df = pd.DataFrame(recall_dict[cell_line]['PDGrapher'], columns=['K', 'Average Recall'])
-    df = df[[e in specific_K_values for e in df['K']]]
+#     # Convert to DataFrame for Seaborn
+#     df = pd.DataFrame(recall_dict[cell_line]['PDGrapher'], columns=['K', 'Average Recall'])
+#     df = df[[e in specific_K_values for e in df['K']]]
 
 
 
-    # Create a dictionary to aggregate drugs by their x position (k value)
-    # Create a dictionary to aggregate drugs by their x position (k value)
-    highlight_dict = defaultdict(list)
-    for drug, k, recall in highlight_points_full_dict[cell_line]:
-        highlight_dict[k].append(drug.capitalize())
+#     # Create a dictionary to aggregate drugs by their x position (k value)
+#     # Create a dictionary to aggregate drugs by their x position (k value)
+#     highlight_dict = defaultdict(list)
+#     for drug, k, recall in highlight_points_full_dict[cell_line]:
+#         highlight_dict[k].append(drug.capitalize())
             
             
-    # Define a list of colors that match the aesthetic of your figures
-    color_list = [
-        '#04C4D9',   # Cyan-like blue
-        '#F28E2B',   # Orange
-        '#E15759',   # Red
-        '#76B7B2',   # Teal
-        '#59A14F',   # Green
-        '#EDC948',   # Yellow
-        '#B07AA1',   # Purple
-        '#FF9DA7',   # Pinkish Red
-        '#9C755F',   # Brown
-        '#BAB0AC',   # Gray
-        '#4E79A7',    # Dark Blue
-        '#2B7A0B',
-        '#FFA07A'
-    ]
+#     # Define a list of colors that match the aesthetic of your figures
+#     color_list = [
+#         '#04C4D9',   # Cyan-like blue
+#         '#F28E2B',   # Orange
+#         '#E15759',   # Red
+#         '#76B7B2',   # Teal
+#         '#59A14F',   # Green
+#         '#EDC948',   # Yellow
+#         '#B07AA1',   # Purple
+#         '#FF9DA7',   # Pinkish Red
+#         '#9C755F',   # Brown
+#         '#BAB0AC',   # Gray
+#         '#4E79A7',    # Dark Blue
+#         '#2B7A0B',
+#         '#FFA07A'
+#     ]
 
-    # Generate a dynamic color palette based on the highlight_dict keys
-    color_palette = {k: color_list[i % len(color_list)] for i, k in enumerate(highlight_dict.keys())}
-
-
+#     # Generate a dynamic color palette based on the highlight_dict keys
+#     color_palette = {k: color_list[i % len(color_list)] for i, k in enumerate(highlight_dict.keys())}
 
 
-    with sns.plotting_context(plotting_context):
-        # Plot using Seaborn
-        plt.figure(figsize=(7.35, 3.4))
-        sns.lineplot(data=df, x='K', y='Average Recall', color='#04C4D9', marker='')
-        # Plotting
-        for k, drugs in highlight_dict.items():
-            label = ',\n'.join(drugs)
-            color = color_palette.get(k, '#000000')  # Default to black if k not in palette
-            plt.axvline(x=k, color=color, linestyle='--', label=label)
-        # Plotting details
-        sns.despine()
-        plt.xlabel('K (Number of top predicted genes considered)')
-        plt.ylabel('Average recall across approved drugs')
-        plt.title('')
-        plt.legend(loc='best', frameon=False, title=None, bbox_to_anchor=(1.2, 1))
-        plt.grid(False)
-        plt.subplots_adjust(left=0.08, right=0.8, top=0.9, bottom=0.1)
-        plt.savefig(osp.join(outdir, 'cumulative_recovery_alldrugs_full_overlap.pdf'))
-        plt.close()
-        plt.close()
+
+
+#     with sns.plotting_context(plotting_context):
+#         # Plot using Seaborn
+#         plt.figure(figsize=(7.35, 3.4))
+#         sns.lineplot(data=df, x='K', y='Average Recall', color='#04C4D9', marker='')
+#         # Plotting
+#         for k, drugs in highlight_dict.items():
+#             label = ',\n'.join(drugs)
+#             color = color_palette.get(k, '#000000')  # Default to black if k not in palette
+#             plt.axvline(x=k, color=color, linestyle='--', label=label)
+#         # Plotting details
+#         sns.despine()
+#         plt.xlabel('K (Number of top predicted genes considered)')
+#         plt.ylabel('Average recall across approved drugs')
+#         plt.title('')
+#         plt.legend(loc='best', frameon=False, title=None, bbox_to_anchor=(1.2, 1))
+#         plt.grid(False)
+#         plt.subplots_adjust(left=0.08, right=0.8, top=0.9, bottom=0.1)
+#         plt.savefig(osp.join(outdir, 'cumulative_recovery_alldrugs_full_overlap.pdf'))
+#         plt.close()
+#         plt.close()

@@ -17,11 +17,11 @@ plotting_context = {
  'xtick.minor.size': 6.0,
  'ytick.minor.size': 6.0,
  'font.size': 8.0,
- 'axes.labelsize': 9.0,
- 'axes.titlesize': 9.0,
- 'xtick.labelsize': 9.0,
- 'ytick.labelsize': 9.0,
- 'legend.fontsize': 10,
+ 'axes.labelsize': 11.0,
+ 'axes.titlesize': 11.0,
+ 'xtick.labelsize': 11.0,
+ 'ytick.labelsize': 11.0,
+ 'legend.fontsize': 11,
  'legend.title_fontsize': 12}
 
 plotting_context_small = {
@@ -39,11 +39,11 @@ plotting_context_small = {
  'xtick.minor.size': 0,
  'ytick.minor.size': 0,
  'font.size': 6.0,
- 'axes.labelsize': 7.0,
- 'axes.titlesize': 8.0,
- 'xtick.labelsize': 6.0,
- 'ytick.labelsize': 6.0,
- 'legend.fontsize': 6,
+ 'axes.labelsize': 9.0,
+ 'axes.titlesize': 9.0,
+ 'xtick.labelsize': 9.0,
+ 'ytick.labelsize': 9.0,
+ 'legend.fontsize': 9,
  'legend.title_fontsize': 6}
 
 color_random = '#9e9e9e'

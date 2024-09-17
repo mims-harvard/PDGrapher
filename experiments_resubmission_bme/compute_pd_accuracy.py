@@ -101,21 +101,39 @@ for cell_line in cell_lines:
         #Dataset
         dataset = Dataset(
             forward_path=None,
-            backward_path="../data/processed/synthetic/data_missing_components/data_backward_synthetic.pt",
-            splits_path="../data/processed/splits/synthetic/missing_components/random/5fold/splits.pt"
+            backward_path="../data/processed/synthetic_lincs/chemical/missing_components/data_backward_synthetic_MDAMB231.pt",
+            splits_path="../data/processed/splits/synthetic_lincs/chemical/missing_components/random/5fold/splits.pt"
         )
 
         
 
         #Modify based on folder name
-        paths = glob('results/synthetic/data_missing_components/*/*')  
+        paths = glob('results/synthetic_lincs/data_missing_components/*/*')  
+        
+    elif data_type == 'synthetic_confounders':
+        use_forward_data = False
+        edge_index = torch.load(f"../data/processed/synthetic_lincs/chemical/confounders/edge_index_synthetic_MDAMB231.pt")
+        
+        
+
+        #Modify based on folder name
+        paths = glob('results/synthetic_lincs/confounders/*/*')    
 
     for path in paths:
         
         if data_type == 'synthetic_missing_components':
             fraction = path.split('/')[-2].split('_')[1]
-            edge_index = torch.load(f"../data/processed/synthetic/data_missing_components/edge_index_synthetic_bridge_removed_frac_{fraction}.pt")
+            edge_index = torch.load(f"../data/processed/synthetic_lincs/chemical/missing_components/edge_index_MDAMB231_fraction_{fraction}.pt")
 
+
+        if data_type == 'synthetic_confounders':
+            fraction = path.split('/')[-2].split('_')[1]
+            #Dataset
+            dataset = Dataset(
+                forward_path=None,
+                backward_path="../data/processed/synthetic_lincs/chemical/confounders/data_backward_synthetic_MDAMB231_fraction_{}.pt".format(fraction),
+                splits_path="../data/processed/splits/synthetic_lincs/chemical/confounders/random/5fold/splits.pt"
+            )
 
         outdir = path
         path_model = path
