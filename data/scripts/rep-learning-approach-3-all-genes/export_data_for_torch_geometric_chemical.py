@@ -354,7 +354,7 @@ def main():
 
 
 		forward_data_list, backward_data_list, edge_index = assemble_data_list(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
-		save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
+		# save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
 
 
 	#Cell lines without healthy counterparts
@@ -368,8 +368,8 @@ def main():
 			#healthy GE data
 		# healthy_data, healthy_metadata = load_healthy_data(data_root_dir_healthy, healthy, log_handle)
 			#COSMIC
-		# cosmic_data = load_cosmic('../../processed/cosmic/CosmicCLP_MutantExport_only_verified_and_curated.csv', log_handle)
-		# cosmic_mutations = map_cosmic_to_lincs(cosmic_data, cell_line, gene_info, dict_symbol_entrez, log_handle)
+		cosmic_data = load_cosmic('../../processed/cosmic/CosmicCLP_MutantExport_only_verified_and_curated.csv', log_handle)
+		cosmic_mutations = map_cosmic_to_lincs(cosmic_data, cell_line, gene_info, dict_symbol_entrez, log_handle)
 		#BACKWARD DATA
 			#LINCS
 		obs_metadata, obs_data, int_metadata, int_data = load_data(cell_line, data_root_dir, log_handle)
@@ -377,7 +377,7 @@ def main():
 
 
 		forward_data_list, backward_data_list, edge_index = assemble_data_list(None, None, None, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
-		save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
+		# save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
 
 	log_handle.close()
 

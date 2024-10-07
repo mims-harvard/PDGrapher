@@ -1,70 +1,55 @@
 
 
-
 import torch
 import os.path as osp
 import h5py
-
-
-
-base_path = '../processed/chemical/real_lognorm'
-
-#Loads datasets
-#MCF7
-# mcf7_forward = torch.load(osp.join(base_path, 'data_forward_MCF7.pt'))
-mcf7_backward = torch.load(osp.join(base_path, 'data_backward_MCF7.pt'))
-
-#A549
-# a549_forward = torch.load(osp.join(base_path, 'data_forward_A549.pt'))
-a549_backward = torch.load(osp.join(base_path, 'data_backward_A549.pt'))
-
-
-#Builds datasets
-mcf7_control = []
-mcf7_treated = []
-mcf7_perturbagen = []
-for data in mcf7_backward:
-    mcf7_control.append(data.diseased.numpy().tolist())
-    mcf7_treated.append(data.treated.numpy().tolist())
-    mcf7_perturbagen.append(data.perturbagen_name)
-    
-
-    
-a549_treated = []
-a549_perturbagen = []
-a549_control = []
-for data in a549_backward:
-    a549_control.append(data.diseased.numpy().tolist())
-    a549_treated.append(data.treated.numpy().tolist())
-    a549_perturbagen.append(data.perturbagen_name)
-
-
-#Transforms datasets into pandas
-import numpy as np
 import pandas as pd
-mcf7_control = pd.DataFrame(np.array(list(mcf7_control)))
-mcf7_treated = pd.DataFrame(np.array(mcf7_treated))
-a549_control = pd.DataFrame(np.array(list(a549_control)))
-a549_treated = pd.DataFrame(np.array(a549_treated))
-
-
-#Creating obs
-cell_line = ['MCF7' for i in range(len(mcf7_control) + len(mcf7_treated))] + ['A549' for i in range(len(a549_control) + len(a549_treated))]
-condition = ['control' for i in range(len(mcf7_control))] + mcf7_perturbagen +  ['control' for i in range(len(a549_control))] + a549_perturbagen
-
-
-#Creates annotated data
-X = pd.concat([mcf7_control, mcf7_treated, a549_control, a549_treated], 0).reset_index(inplace=False, drop=True)
-obs = pd.DataFrame([cell_line, condition]).transpose()
-obs.columns = ['cell_type', 'condition']
-var = pd.DataFrame(a549_backward[0].gene_symbols, columns = ['gene_symbols'])
-
+import numpy as np
 import anndata
-train = anndata.AnnData(X, obs,var)
 
-import hdf5plugin
-train.write(
-    osp.join(base_path, 'data_scgen.h5ad')
-)
+base_path = '../../processed/torch_data/chemical/real_lognorm'
 
+cell_lines = ["A549","A375","BT20","HA1E","HELA","HT29","MCF7","MDAMB231","PC3","VCAP"]
 
+for cell_line in cell_lines:
+    print("Processing cell line: ", cell_line)
+    #Loads datasets
+    data_backward = torch.load(osp.join(base_path, 'data_backward_' + cell_line + '.pt'))
+    #Builds datasets
+    data_treated = []
+    data_perturbagen = []
+    data_control = []
+    for data in data_backward:
+        data_control.append(data.diseased.numpy().tolist())
+        data_treated.append(data.treated.numpy().tolist())
+        data_perturbagen.append(data.perturbagen_name)
+    #Transforms datasets into pandas
+    data_control = pd.DataFrame(np.array(list(data_control)))
+    data_treated = pd.DataFrame(np.array(data_treated))
+    print(data_control.shape)
+    print(data_treated.shape)
+    #Creating obs
+    cellline = [cell_line for i in range(len(data_control) + len(data_treated))]
+    condition = ['control' for i in range(len(data_control))] + data_perturbagen
+    #Creates annotated data
+    X = pd.concat([data_control, data_treated], axis=0).reset_index(inplace=False, drop=True)
+    obs = pd.DataFrame([cellline, condition]).transpose()
+    obs.columns = ['cell_type', 'condition']
+    var = pd.DataFrame(data_backward[0].gene_symbols, columns = ['gene_symbols'])
+    train = anndata.AnnData(X, obs,var)
+    ind = torch.load(f"../../processed/splits/chemical/{cell_line}/random/5fold/splits.pt")
+    for j in range(1,6):
+        train_ = ind[j]["train_index_backward"]
+        test_ = ind[j]["test_index_backward"]
+        val_ = ind[j]["val_index_backward"]
+        print(len(train_) + len(test_) + len(val_))
+        assert len(train_) + len(test_) + len(val_) == len(train) / 2
+        print("Pass checking")
+        temp = np.array(['data0' for _ in range(len(data_treated))])
+        temp[train_] = 'train'
+        temp[test_] = 'test'
+        temp[val_] = 'val'
+        train.obs['split'+str(j)] = np.concatenate([temp, temp], axis=0) # same split for treated and control
+        train.write(
+        osp.join(base_path, 'data_split_' + cell_line +'.h5ad')
+    )

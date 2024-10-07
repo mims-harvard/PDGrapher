@@ -179,3 +179,8 @@ job_*
 #large files
 *ours_to_real.txt
 *random_to_real.txt
+*aggregated_ranking_random.pickle
+*aggregated_ranking.pickle
+
+#irrelevant
+*scgen*
