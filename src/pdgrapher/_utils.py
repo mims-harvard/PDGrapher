@@ -92,7 +92,7 @@ def _get_thresholds(dataset, kind: str):
 
 def get_thresholds(dataset):
     return {
-        'healthy': _get_thresholds(dataset.train_dataset_forward, "healthy"),
+        'healthy': _get_thresholds(dataset.train_dataset_forward, "healthy") if hasattr(dataset, 'train_dataset_forward') else None,
         'diseased': _get_thresholds(dataset.train_dataset_backward, "diseased"),
         'treated': _get_thresholds(dataset.train_dataset_backward, "treated")
     }

@@ -13,7 +13,11 @@ class Dataset:
 
     def __init__(self, forward_path: str, backward_path: str, splits_path: str,
                  test_indices: bool = True):
-        self.dataset_forward = torch.load(forward_path)
+        if forward_path is not None:
+            self.dataset_forward = torch.load(forward_path)
+        else:
+            self.dataset_forward = []
+            
         self.dataset_backward = torch.load(backward_path)
 
         self.splits = torch.load(splits_path)
@@ -47,37 +51,44 @@ class Dataset:
         self.test_index_forward = fold_splits["test_index_forward"]
         self.test_index_backward = fold_splits["test_index_backward"]
 
-        self.train_dataset_forward = [self.dataset_forward[i] for i in self.train_index_forward]
-        self.val_dataset_forward = [self.dataset_forward[i] for i in self.val_index_forward]
-        self.test_dataset_forward = [self.dataset_forward[i] for i in self.test_index_forward]
+        if self.train_index_forward is not None:
+            self.train_dataset_forward = [self.dataset_forward[i] for i in self.train_index_forward]
+            self.val_dataset_forward = [self.dataset_forward[i] for i in self.val_index_forward]
+            self.test_dataset_forward = [self.dataset_forward[i] for i in self.test_index_forward]
         self.train_dataset_backward = [self.dataset_backward[i] for i in self.train_index_backward]
         self.val_dataset_backward = [self.dataset_backward[i] for i in self.val_index_backward]
         self.test_dataset_backward = [self.dataset_backward[i] for i in self.test_index_backward]
 
     def get_num_vars(self) -> int:
-        return self.dataset_forward[0].num_nodes
+        return self.dataset_backward[0].num_nodes
 
     def _test_indices(self, fold_splits):
-        set_trif = set(fold_splits["train_index_forward"])
+        #Forward indices - if exists
+        if fold_splits["train_index_forward"] is not None:
+            set_trif = set(fold_splits["train_index_forward"])
+            set_vif = set(fold_splits["val_index_forward"])
+            set_teif = set(fold_splits["test_index_forward"])
+            _test_condition(not any(x in set_teif for x in set_trif), "Overlap between train and test indices should be zero (forward)")
+            _test_condition(not any(x in set_vif for x in set_trif), "Overlap between train and validation indices should be zero (forward)")
+            _test_condition(not any(x in set_teif for x in set_vif), "Overlap between validation and test indices should be zero (forward)")
+
+
+        #Backward indices
         set_trib = set(fold_splits["train_index_backward"])
-        set_vif = set(fold_splits["val_index_forward"])
         set_vib = set(fold_splits["val_index_backward"])
-        set_teif = set(fold_splits["test_index_forward"])
         set_teib = set(fold_splits["test_index_backward"])
-        _test_condition(not any(x in set_vif for x in set_trif), "Overlap between train and validation indices should be zero (forward)")
-        _test_condition(not any(x in set_teif for x in set_trif), "Overlap between train and test indices should be zero (forward)")
-        _test_condition(not any(x in set_teif for x in set_vif), "Overlap between validation and test indices should be zero (forward)")
+        
         _test_condition(not any(x in set_vib for x in set_trib), "Overlap between train and validation indices should be zero (backward)")
         _test_condition(not any(x in set_teib for x in set_trib), "Overlap between train and test indices should be zero (backward)")
         _test_condition(not any(x in set_teib for x in set_vib), "Overlap between validation and test indices should be zero (backward)")
 
-    def get_dataloaders(self, batch_size: int = 6, **kwargs) -> List[DataLoader]:
-        kwargs = {**{"shuffle": True, "drop_last": True}, **kwargs} # default kwargs
+    def get_dataloaders(self, batch_size: int = 64, shuffle = True, **kwargs) -> List[DataLoader]:
+        kwargs = {**{"shuffle": shuffle, "drop_last": True}, **kwargs} # default kwargs
         return [
-            DataLoader(self.train_dataset_forward, batch_size=batch_size, **kwargs),
+            DataLoader(self.train_dataset_forward, batch_size=batch_size, **kwargs) if hasattr(self, 'train_dataset_forward') else None,
             DataLoader(self.train_dataset_backward, batch_size=batch_size, **kwargs),
-            DataLoader(self.val_dataset_forward, batch_size=batch_size, **kwargs),
+            DataLoader(self.val_dataset_forward, batch_size=batch_size, **kwargs) if hasattr(self, 'val_dataset_forward') else None,
             DataLoader(self.val_dataset_backward, batch_size=batch_size, **kwargs),
-            DataLoader(self.test_dataset_forward, batch_size=batch_size, **kwargs),
+            DataLoader(self.test_dataset_forward, batch_size=batch_size, **kwargs) if hasattr(self, 'test_dataset_forward') else None,
             DataLoader(self.test_dataset_backward, batch_size=batch_size, **kwargs)
         ]

@@ -1,0 +1,10 @@
+avg distance in network	2.83 ± 0.77
+Average distance for random:	3.1478587031624845
+Average distance for PDGrapher:	2.8296404063292604
+P-value t-test of PDGrapher distances being smaller than random:	0.0
+Median distance for random:	3.0
+Median distance for PDGrapher:	3.0
+Statistic MW-test of PDGrapher distances being smaller than random:	21493108672.0
+P-value MW-test of PDGrapher distances being smaller than random:	0.0
+Effect size:	0.2082849011746125
+Confidence intervanl:	(0.20530923106303234, 0.21109679551589464)

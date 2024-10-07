@@ -97,6 +97,7 @@ class GCNBase(nn.Module):
         self.mlp.append(nn.Linear(args.dim_gnn + 2*args.embedding_layer_dim, args.dim_gnn))
         for _ in range(args.n_layers_nn-1):
             self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn))
+
         self.mlp.append(nn.Linear(args.dim_gnn, args.dim_gnn//2)) # int(args.dim_gnn/2)
         self.mlp.append(nn.Linear(args.dim_gnn//2, 1)) # int(args.dim_gnn/2), args.out_channels
 
@@ -104,6 +105,7 @@ class GCNBase(nn.Module):
         self.bns_mlp = nn.ModuleList()
         for _ in range(args.n_layers_nn):
             self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn))
+            
         self.bns_mlp.append(nn.BatchNorm1d(args.dim_gnn//2)) # int(args.dim_gnn/2)
 
         # Output function
@@ -166,7 +168,125 @@ class GCNBase(nn.Module):
             self.dictionary_node_to_edge_index_position[node].append(i)
 
 
+
 class ResponsePredictionModel(GCNBase):
+    """
+    Class that represents Response Prediction model.
+    """
+
+    def __init__(self, args: GCNArgs, edge_index: torch.Tensor):
+        super().__init__(args, "response", edge_index)
+
+        self.num_nodes = args.num_vars
+        self.embed_layer_pert = EmbedLayer(args.num_vars, num_features=1, num_categs=2, hidden_dim=args.embedding_layer_dim)
+        self.embed_layer_ge = EmbedLayer(args.num_vars, num_features=1, num_categs=500, hidden_dim=args.embedding_layer_dim)
+        self.positional_embeddings = nn.Embedding(args.num_vars, self.positional_features_dims)
+        nn.init.normal_(self.positional_embeddings.weight, mean=0.0, std=1.0)
+
+
+    def forward(self, x, batch, topK=None, binarize_intervention=False, mutilate_mutations=None, threshold_input=None):
+        '''
+        GCN model adapted to use 1 single edge_index for all samples in the batch
+        and x_j_mask to mask messages x_j (acting as mutilation procedure)
+        '''
+
+        x, in_x_binarized = self._get_embeddings(x, batch, topK, binarize_intervention, mutilate_mutations, threshold_input)
+        x = self.mlp[-1](x)
+
+        return self.out_fun(x), in_x_binarized
+
+
+    def _get_embeddings(self, x, batch, topK=None, binarize_intervention=False, mutilate_mutations=None, threshold_input=None):
+    
+
+        # Positional encodings
+        pos_embeddings = self.positional_embeddings(torch.arange(self.num_nodes).to(x.device))
+        random_dims = pos_embeddings.repeat(int(x.shape[0] / self.num_nodes), 1)
+
+
+        # Feature embedding
+        x_ge, _ = self.embed_layer_ge(x[:, 0].view(-1, 1), topK=None, binarize_intervention=False, binarize_input=True, threshold_input=threshold_input)
+        x_pert, in_x_binarized = self.embed_layer_pert(x[:, 1].view(-1, 1), topK=topK, binarize_intervention=binarize_intervention, binarize_input=False, threshold_input=None)
+
+        if binarize_intervention:
+            uprime = in_x_binarized.view(-1).clone()
+        else:
+            uprime = x[:, 1].clone()
+
+        x_j_mask = None
+        if self._mutilate_graph:
+            x_j_mask = self.mutilate_graph(batch, uprime, mutilate_mutations)
+
+        x = self.from_node_to_out(x_ge, x_pert, batch, random_dims, x_j_mask)
+
+        return x, in_x_binarized
+
+
+class PerturbationDiscoveryModel(GCNBase):
+    """
+    Class that represents Perturbation Discovery model.
+    """
+
+    def __init__(self, args: GCNArgs, edge_index: torch.Tensor):
+        super().__init__(args, "perturbation", edge_index)
+        
+        self.num_nodes = args.num_vars
+        self.embed_layer_diseased = EmbedLayer(args.num_vars, num_features=1, num_categs=500, hidden_dim=args.embedding_layer_dim)
+        self.embed_layer_treated = EmbedLayer(args.num_vars, num_features=1, num_categs=500, hidden_dim=args.embedding_layer_dim)
+        self.positional_embeddings = nn.Embedding(args.num_vars, self.positional_features_dims)
+        nn.init.normal_(self.positional_embeddings.weight, mean=0.0, std=1.0)
+
+    def forward(self, x, batch, topK=None, mutilate_mutations=None, threshold_input=None):
+        '''
+        GCN model adapted to use 1 single edge_index for all samples in the batch
+        and x_j_mask to mask messages x_j (acting as mutilation procedure)
+        '''
+
+        x = self._get_embeddings(x, batch, topK, mutilate_mutations, threshold_input)
+        x = self.mlp[-1](x)
+
+        return self.out_fun(x)
+
+
+    def _get_embeddings(self, x, batch, topK=None, mutilate_mutations=None, threshold_input=None):
+        if self._mutilate_graph and mutilate_mutations is None:
+            raise ValueError("Mutations should not be None in intervention discovery model")
+
+
+        # Positional encodings
+        pos_embeddings = self.positional_embeddings(torch.arange(self.num_nodes).to(x.device))
+        random_dims = pos_embeddings.repeat(int(x.shape[0] / self.num_nodes), 1)
+
+
+        # Feature embedding
+        x_diseased, _ = self.embed_layer_diseased(x[:, 0].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input["diseased"])
+        x_treated, _ = self.embed_layer_treated(x[:, 1].view(-1, 1), topK=None, binarize_input=True, threshold_input=threshold_input["treated"])
+
+        x_j_mask = None
+        if self._mutilate_graph:
+            x_j_mask = self.mutilate_graph(batch, mutilate_mutations=mutilate_mutations)
+
+        x = self.from_node_to_out(x_diseased, x_treated, batch, random_dims, x_j_mask)
+
+        return x
+
+
+
+
+
+
+
+
+
+
+
+##################
+#OLD VERSION
+
+
+
+
+class ResponsePredictionModelOld(GCNBase):
     """
     Class that represents Response Prediction model.
     """
@@ -213,7 +333,7 @@ class ResponsePredictionModel(GCNBase):
         return x, in_x_binarized
 
 
-class PerturbationDiscoveryModel(GCNBase):
+class PerturbationDiscoveryModelOld(GCNBase):
     """
     Class that represents Perturbation Discovery model.
     """

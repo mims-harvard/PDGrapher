@@ -14,7 +14,7 @@ outdir = '../../processed/cosmic'
 os.makedirs(outdir, exist_ok=True)
 
 
-cell_lines = ['A549', 'PC-3', 'MCF7', 'BT-20', 'MDA-MB-231', 'VCaP']
+cell_lines = ['A549', 'PC-3', 'MCF7', 'BT-20', 'MDA-MB-231', 'VCaP', 'A375', 'HT-29', 'ES-2', 'BICR6', 'YAPC', 'AGS', 'U251MG']
 
 
 

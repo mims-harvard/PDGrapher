@@ -16,7 +16,7 @@ from torch.nn.functional import mse_loss, binary_cross_entropy_with_logits
 from .datasets import Dataset
 from .pdgrapher import PDGrapher
 from ._utils import get_thresholds, calculate_loss_sample_weights, DummyWriter, EarlyStopping
-
+from time import time
 
 class Trainer:
 
@@ -60,6 +60,8 @@ class Trainer:
                 self.logging_name += "_"
 
     def train(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}) -> Dict[str, Dict[str, float]]:
+
+        t0 = time()
         # Loss weights, thresholds
         sample_weights_model_2_backward = calculate_loss_sample_weights(dataset.train_dataset_backward, "intervention")
         sample_weights_model_2_backward = self.fabric.to_device(sample_weights_model_2_backward)
@@ -68,9 +70,16 @@ class Trainer:
         thresholds = {k: self.fabric.to_device(v) for k, v in thresholds.items()} # do we really need them?
         model.response_prediction.edge_index = self.fabric.to_device(model.response_prediction.edge_index)
         model.perturbation_discovery.edge_index = self.fabric.to_device(model.perturbation_discovery.edge_index)
+        t1 = time()
+        print('Time in Loss weights, thresholds: {:.3f} secs'.format(t1 - t0))
 
+
+        t0 = time()
         # Optimizers & Schedulers
         model_1, model_2 = self._configure_model_with_optimizers_and_schedulers(model)
+        t1 = time()
+        print('Time in Optimizers & Schedulers: {:.3f} secs'.format(t1 - t0))
+
 
         if self.use_logging:
             # Log model parameters
@@ -81,13 +90,26 @@ class Trainer:
             log_metrics = open(osp.join(self.logging_dir, f"{self.logging_name}metrics.txt"), "w")
         makedirs(self.logging_dir, exist_ok=True)
 
+
+        t0 = time()
         # Dataloaders
+        # (
+        #     train_loader_forward, train_loader_backward,
+        #     val_loader_forward, val_loader_backward,
+        #     test_loader_forward, test_loader_backward
+        # ) = self.fabric.setup_dataloaders(*dataset.get_dataloaders())
+
         (
             train_loader_forward, train_loader_backward,
             val_loader_forward, val_loader_backward,
             test_loader_forward, test_loader_backward
-        ) = self.fabric.setup_dataloaders(*dataset.get_dataloaders())
+        ) = dataset.get_dataloaders(num_workers = 20)
 
+
+        t1 = time()
+        print('Time in Dataloaders: {:.3f} secs'.format(t1 - t0))
+
+        t0 = time()
         # Early stopping
         es_1 = EarlyStopping(model=model_1, save_path=osp.join(self.logging_dir, f"{self.logging_name}response_prediction.pt"), **early_stopping_kwargs)
         es_2 = EarlyStopping(model=model_2, save_path=osp.join(self.logging_dir, f"{self.logging_name}perturbation_discovery.pt"), **early_stopping_kwargs)
@@ -95,6 +117,9 @@ class Trainer:
             es_1.is_stopped = True
         if not model._train_perturbation_discovery:
             es_2.is_stopped = True
+        t1 = time()
+        print('Time in Early stopping: {:.3f} secs'.format(t1 - t0))
+
 
         # Train loop
         for epoch in range(1, n_epochs+1):
@@ -194,7 +219,7 @@ class Trainer:
     def train_kfold(self, model: PDGrapher, dataset: Dataset, n_epochs: int, early_stopping_kwargs: Dict[str, Any] = {}):
         model_performances = list()
         _prev_name = self.logging_name
-
+        
         for fold_idx in range(1, dataset.num_of_folds + 1):
             dataset.prepare_fold(fold_idx)
             self.logging_paths(name=f"{_prev_name}_fold_{fold_idx}_")
@@ -213,14 +238,16 @@ class Trainer:
         noptims_response = 0
         noptims_intervention = 0
 
+        
+        # self.fabric.to_device(
         # Do we train the response prediction model?
         if not es_1.is_stopped:
             model_1.train()
             if self.use_forward_data:
                 for data in loader_forward:
                     self._op1_zero_grad()
-                    output_forward, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
-                    loss_forward = mse_loss(output_forward.view(-1), data.diseased)
+                    output_forward, _ = model_1(torch.concat([self.fabric.to_device(data.healthy.view(-1, 1)), self.fabric.to_device(data.mutations.view(-1, 1))], 1), self.fabric.to_device(data.batch), binarize_intervention=False, threshold_input=thresholds["healthy"])
+                    loss_forward = mse_loss(output_forward.view(-1), self.fabric.to_device(data.diseased))
                     self.fabric.backward(loss_forward)
                     self._op1_step()
                     self._sc1_step()
@@ -229,8 +256,8 @@ class Trainer:
             if self.use_backward_data:
                 for data in loader_backward:
                     self._op1_zero_grad()
-                    output_forward, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, binarize_intervention=False, mutilate_mutations=data.mutations, threshold_input=thresholds["diseased"])
-                    loss_forward = mse_loss(output_forward.view(-1), data.treated)
+                    output_forward, _ = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.intervention.view(-1, 1))], 1), self.fabric.to_device(data.batch), binarize_intervention=False, mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds["diseased"])
+                    loss_forward = mse_loss(output_forward.view(-1), self.fabric.to_device(data.treated))
                     self.fabric.backward(loss_forward)
                     self._op1_step()
                     self._sc1_step()
@@ -244,14 +271,14 @@ class Trainer:
             if self.use_intervention_data:
                 for data in loader_backward:
                     self._op2_zero_grad()
-                    pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
+                    pred_backward_m2 = model_2(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.treated.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds)
                     # prior knowledge: number of perturbations (targets) per drug
                     topK = torch.sum(data.intervention.view(-1, int(data.num_nodes / len(torch.unique(data.batch)))), 1)
-                    pred_backward_m1, in_x_binarized = model_1(torch.concat([data.diseased.view(-1, 1), pred_backward_m2], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
-                    loss_backward = mse_loss(pred_backward_m1.view(-1), data.treated)
+                    pred_backward_m1, in_x_binarized = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), pred_backward_m2], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
+                    loss_backward = mse_loss(pred_backward_m1.view(-1), self.fabric.to_device(data.treated))
                     # adds supervision
                     if self.use_supervision:
-                        loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
+                        loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), self.fabric.to_device(data.intervention), pos_weight=pos_weight)
                     # Freezing response prediction model
                     self._freeze_model(model_1)
                     self.fabric.backward(loss_backward)
@@ -265,8 +292,8 @@ class Trainer:
                 for data in loader_backward:
                     # Backward
                     self._op2_zero_grad()
-                    pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
-                    loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
+                    pred_backward_m2 = model_2(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.treated.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds)
+                    loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), self.fabric.to_device(data.intervention), pos_weight=pos_weight)
                     self.fabric.backward(loss_backward)
                     self._op2_step()
                     self._sc2_step()
@@ -298,14 +325,14 @@ class Trainer:
                 for data in loader_forward:
                     # Forward
                     # regression loss - learns diseased from healthy and mutations
-                    output_forward, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
-                    loss_forward = mse_loss(output_forward.view(-1), data.diseased)
+                    output_forward, _ = model_1(torch.concat([self.fabric.to_device(data.healthy.view(-1, 1)), self.fabric.to_device(data.mutations.view(-1, 1))], 1), self.fabric.to_device(data.batch), binarize_intervention=False, threshold_input=thresholds["healthy"])
+                    loss_forward = mse_loss(output_forward.view(-1), self.fabric.to_device(data.diseased))
                     l_response += float(loss_forward)
                 noptims_response += len(loader_forward)
             if self.use_backward_data:
                 for data in loader_backward:
-                    out, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, binarize_intervention=False, threshold_input=thresholds["diseased"])
-                    loss_forward = mse_loss(out.view(-1), data.treated)
+                    out, _ = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.intervention.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), binarize_intervention=False, threshold_input=thresholds["diseased"])
+                    loss_forward = mse_loss(out.view(-1), self.fabric.to_device(data.treated))
                     l_response += float(loss_forward)
                 noptims_response += len(loader_backward)
 
@@ -314,20 +341,20 @@ class Trainer:
                 for data in loader_backward:
                     # Backward
                     # (1), (2) cycle loss with M_1 frozen
-                    pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
+                    pred_backward_m2 = model_2(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.treated.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds)
                     # prior knowledge: number of perturbations (targets) per drug
                     topK = torch.sum(data.intervention.view(-1, int(data.num_nodes / len(torch.unique(data.batch)))), 1)
-                    pred_backward_m1, in_x_binarized = model_1(torch.concat([data.diseased.view(-1, 1), pred_backward_m2], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
-                    loss_backward = mse_loss(pred_backward_m1.view(-1), data.treated)
+                    pred_backward_m1, in_x_binarized = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), pred_backward_m2], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
+                    loss_backward = mse_loss(pred_backward_m1.view(-1), self.fabric.to_device(data.treated))
                     if self.use_supervision:
-                        loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
+                        loss_backward += self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), self.fabric.to_device(data.intervention), pos_weight=pos_weight)
                     l_intervention += float(loss_backward)
                 noptims_intervention += len(loader_backward)
             # supervision for U'
             elif self.use_supervision:
                 for data in loader_backward:
-                    pred_backward_m2 = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
-                    loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), data.intervention, pos_weight=pos_weight)
+                    pred_backward_m2 = model_2(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.treated.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds)
+                    loss_backward = self.supervision_multiplier * binary_cross_entropy_with_logits(pred_backward_m2.view(-1), self.fabric.to_device(data.intervention), pos_weight=pos_weight)
                     l_intervention += float(loss_backward)
                 noptims_intervention += len(loader_backward)
 
@@ -350,13 +377,13 @@ class Trainer:
             score_y = []
             if self.use_forward_data:
                 for data in loader_forward:
-                    out, _ = model_1(torch.concat([data.healthy.view(-1, 1), data.mutations.view(-1, 1)], 1), data.batch, binarize_intervention=False, threshold_input=thresholds["healthy"])
+                    out, _ = model_1(torch.concat([self.fabric.to_device(data.healthy.view(-1, 1)), self.fabric.to_device(data.mutations.view(-1, 1))], 1), self.fabric.to_device(data.batch), binarize_intervention=False, threshold_input=thresholds["healthy"])
                     real_y += data.diseased.detach().cpu().tolist()
                     score_y += out[:, -1].detach().cpu().tolist()
 
             if self.use_backward_data:
                 for data in loader_backward:
-                    out, _ = model_1(torch.concat([data.diseased.view(-1, 1), data.intervention.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, binarize_intervention=False, threshold_input=thresholds["diseased"])
+                    out, _ = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.intervention.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), binarize_intervention=False, threshold_input=thresholds["diseased"])
                     real_y += data.treated.detach().cpu().tolist()
                     score_y += out[:, -1].detach().cpu().tolist()
 
@@ -397,7 +424,7 @@ class Trainer:
                 perturbagens += data.perturbagen_name
                 num_nodes = int(data.num_nodes / len(torch.unique(data.batch)))
                 # predicting interventions
-                out = model_2(torch.concat([data.diseased.view(-1, 1), data.treated.view(-1, 1)], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds)
+                out = model_2(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), self.fabric.to_device(data.treated.view(-1, 1))], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds)
 
                 # measure accuracy predicted U'
                 where_intervention = torch.where(data.intervention.detach().cpu().view(-1, num_nodes))
@@ -408,7 +435,7 @@ class Trainer:
 
                 # response prediction
                 topK = torch.sum(data.intervention.view(-1, int(data.num_nodes / len(torch.unique(data.batch)))), 1)
-                out, in_x_binarized = model_1(torch.concat([data.diseased.view(-1, 1), out], 1), data.batch, mutilate_mutations=data.mutations, threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
+                out, in_x_binarized = model_1(torch.concat([self.fabric.to_device(data.diseased.view(-1, 1)), out], 1), self.fabric.to_device(data.batch), mutilate_mutations=self.fabric.to_device(data.mutations), threshold_input=thresholds["diseased"], binarize_intervention=True, topK=topK)
 
                 real_y += data.treated.detach().cpu().tolist()
                 score_y += out[:, -1].detach().cpu().tolist()

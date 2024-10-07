@@ -47,7 +47,10 @@ def map_cosmic_to_lincs(cosmic_data, cell_line, gene_info, dict_symbol_entrez, l
 	#Filter genes not mapped to LINCS
 	cosmic_data = cosmic_data[[gene_symbol in dict_symbol_entrez for gene_symbol in cosmic_data['Gene name']]]
 	#Save COSMIC mutations as entrez id (dataframe index)
-	cosmic_mutations = list(set([dict_symbol_entrez[symbol] for symbol in cosmic_data['Gene name']]))
+	try:
+		cosmic_mutations = list(set([dict_symbol_entrez[symbol] for symbol in cosmic_data['Gene name'].tolist()]))
+	except:
+		import pdb; pdb.set_trace()
 	return cosmic_mutations
 
 
@@ -297,7 +300,7 @@ def main():
 
 
 		forward_data_list, backward_data_list, edge_index = assemble_data_list(healthy_data, healthy_metadata, cosmic_mutations, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
-		save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
+		# save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
 
 
 
@@ -326,7 +329,7 @@ def main():
 
 
 		forward_data_list, backward_data_list, edge_index = assemble_data_list(None, None, None, obs_metadata, obs_data, int_metadata, int_data, ppi, gene_info, log_handle)
-		save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
+		# save_data(forward_data_list, backward_data_list, edge_index, cell_line, log_handle)
 
 
 	log_handle.close()

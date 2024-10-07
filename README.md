@@ -18,10 +18,13 @@ pip install pip==23.2.1
 pip install -r requirements.txt
 
 pip install torch==1.10.1+cu111 torchvision==0.11.2+cu111 torchaudio==0.10.1 -f https://download.pytorch.org/whl/cu111/torch_stable.html
-pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
+pip install torch-scatter==2.0.9 -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
+pip install torch-sparse==0.6.12 -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
+pip install torch-cluster==1.5.9 -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
+pip install torch-spline-conv==1.2.1 -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
+pip install torch-geometric==2.0.4 -f https://data.pyg.org/whl/torch-1.10.1+cu111.html
 pip install torchmetrics==0.9.3
 pip install lightning==1.9.5
-pip install torch-sparse==0.6.13
 
 ```
 

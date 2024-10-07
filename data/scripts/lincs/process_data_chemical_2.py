@@ -304,7 +304,7 @@ def filter_cell_lines(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, log_ha
 	log_handle.write('CONTROL:\t{} datapoints\n'.format(matrix_ctl.shape[1]))
 
 	# Stats
-	stats_control(inst_info_ctl, log_handle)
+	#stats_control(inst_info_ctl, log_handle)
 
 	return inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines
 
@@ -344,7 +344,7 @@ def filter_cell_lines_custom(inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl,
 	log_handle.write('CONTROL:\t{} datapoints\n'.format(matrix_ctl.shape[1]))
 
 	# Stats
-	stats_control(inst_info_ctl, log_handle)
+	#stats_control(inst_info_ctl, log_handle)
 
 	return inst_info_cp, matrix_cp, inst_info_ctl, matrix_ctl, keep_cell_lines
 

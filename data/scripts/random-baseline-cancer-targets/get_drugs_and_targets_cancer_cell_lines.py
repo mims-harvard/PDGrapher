@@ -14,19 +14,27 @@ os.makedirs(outdir, exist_ok=True)
 
 
 #Cell lines and cancer
-cancer_cell_mapping = {'breast': 'MCF7',
-						'lung': 'A549',
-						 'prostate': 'PC3'}
+cancer_cell_mapping = {'breast': ['MCF7', 'BT20', 'MDAMB231'],
+						'lung': ['A549'],
+						'prostate': ['PC3', 'VCAP'],
+      					'gastric': ['AGS'],
+            			'skin': ['A375'],
+               			'cervical': ['HELA'],
+                  		'colorectal': ['HT29'],
+                    	'head': ['BICR6'],
+                     	'ovarian': ['ES2'],
+                    	'brain': ['U251MG'],
+                     	'pancreatic': ['YAPC']}
 
 
 #Loads data
-cancer_drugs = pd.read_csv('../../raw/nci/2022-11-NCI/cancer_drugs.csv')
+cancer_drugs = pd.read_csv('../../raw/nci/2022-11-NCI/data/cancer_drugs_2024.csv')
 cancer_drugs['drug'] =[e.lower() for e in cancer_drugs['drug']]
-drug_targets = pd.read_csv('../../drugbank/processed/targets.txt', sep=',', low_memory=False)
-drug_targets['1'] = [e.lower() for e in drug_targets['1']]
-drug_targets['2'] = [str(e).lower() for e in drug_targets['2']]
-drug_targets.columns = ['drug_id', 'drug_name', 'drug_synonyms', 'target_id', 'target_name', 'gene_name', 'identifiers', 'organism']
+drug_targets = pd.read_csv('../../processed/drugbank/targets.txt', sep=',', low_memory=False)
 
+drug_targets.columns = ['drug_id', 'drug_name', 'drug_synonyms', 'target_id', 'target_name', 'gene_name', 'gene_synonyms', 'identifiers', 'organism']
+drug_targets['drug_name'] = [e.lower() for e in drug_targets['drug_name']]
+drug_targets['drug_synonyms'] = [str(e).lower() for e in drug_targets['drug_synonyms']]
 
 #Create dictionary of synonym-->drug
 dict_syn_drug = dict()
@@ -47,6 +55,7 @@ for i in range(len(drug_targets)):
 
 
 #For each cancer, compile targets of approved drugs
+#Manual mappings
 manual_mappings = {'lapatinib ditosylate': 'lapatinib',
 					'osimertinib mesylate': 'osimertinib',
 					'abiraterone': 'abiraterone',
@@ -65,7 +74,21 @@ manual_mappings = {'lapatinib ditosylate': 'lapatinib',
 					'lutetium lu 177 vipivotide tetraxetan': 'lutetium lu-177 vipivotide tetraxetan',
 					'capmatinib hydrochloride': 'capmatinib',
 					'afatinib dimaleate' : 'afatinib',
-					'capmatinib hydrochloride': 'capmatinib'}
+					'capmatinib hydrochloride': 'capmatinib',
+     				'toripalimab-tpzi': 'toripalimab',
+         			'amivantamab-vmjw': 'amivantamab',
+            		'cemiplimab-rwlc': 'cemiplimab',
+              		'fam-trastuzumab deruxtecan-nxki': 'Trastuzumab deruxtecan',
+                	'tarlatamab-dlle': 'tarlatamab',
+                 	'tremelimumab-actl': 'tremelimumab',
+                  	'sacituzumab govitecan-hziy':'Sacituzumab govitecan',
+                   	'ado-trastuzumab emtansine': 'Trastuzumab emtansine',
+                    'margetuximab-cmkb':'Margetuximab',
+                    'sacituzumab govitecan-hziy':'Sacituzumab govitecan',
+                    'cobimetinib fumarate': 'cobimetinib',
+                    'retifanlimab-dlwr': 'retifanlimab',
+                    'tisotumab vedotin-tftv': 'tisotumab vedotin'
+                    }
 
 in_drugbank = set(dict_syn_drug.keys())
 table_cancer_drugs_and_targets = []
@@ -83,14 +106,16 @@ for cancer in list(set(cancer_drugs['cancer_type'])):
 			drugs.append('pertuzumab')
 			drugs.append('trastuzumab')
 			drugs.append('hyaluronidase')
-	for d in drugs:
-		if d in dict_syn_drug:
-			name = dict_syn_drug[d]
-		else:
-			not_mapped.append(d)
-		targets = dict_drug_targets[name]
-		targets = ','.join(targets).replace('-,','')
-		table_cancer_drugs_and_targets.append([cancer_cell_mapping[cancer], name, targets])
+	cells = cancer_cell_mapping[cancer]
+	for cell in cells:
+		for d in drugs:
+			if d in dict_syn_drug:
+				name = dict_syn_drug[d]
+			else:
+				not_mapped.append(d)
+			targets = dict_drug_targets[name]
+			targets = ','.join(targets).replace('-,','')
+			table_cancer_drugs_and_targets.append([cell, name, targets])
 	log.write('CANCER:\t{},\tCELL LINE:\t{}\n'.format(cancer, cancer_cell_mapping[cancer]))
 	log.write('Number of approved drugs from NCI:\t{}\n'.format(len(set(drugs))))
 	log.write('Mapped drugs from NCI to DrugBank:\t{}/{}\n'.format(len(set(drugs).intersection(in_drugbank)) , len(set(drugs))))
