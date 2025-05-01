@@ -7,4 +7,4 @@ Median distance for PDGrapher:	3.0
 Statistic MW-test of PDGrapher distances being smaller than random:	129003880519.0
 P-value MW-test of PDGrapher distances being smaller than random:	0.0
 Effect size:	0.353107047471677
-Confidence intervanl:	(0.35152905540589663, 0.3549187961605975)
+Confidence intervanl:	(0.3515577850257587, 0.35493273973656986)
