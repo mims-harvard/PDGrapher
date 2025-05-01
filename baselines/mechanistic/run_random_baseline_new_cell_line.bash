@@ -6,7 +6,8 @@
 #BSUB -e logs_shpc/output-PC3-%J.err    # Error file
 #BSUB -M 5G                              # memory in MB
 #BSUB -N                                 # send output by email 
-#BSUB -W 10:00                            # Job timelimit
+#BSUB -u gonzalez.guadalupe@gene.com                        # Email address for notifications
+#BSUB -W 24:00                            # Job timelimit
 
 
 

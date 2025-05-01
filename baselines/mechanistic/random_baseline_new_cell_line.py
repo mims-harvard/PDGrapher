@@ -11,7 +11,7 @@ It can be
 '''
 
 
-
+import torch
 import os.path as osp
 import pandas as pd
 import numpy as np
@@ -19,13 +19,13 @@ from scipy.spatial import distance
 import random
 import os
 import pickle
-import torch
-
 
 cell_lines = {'chemical': ["A549", "A375", "BT20", "HELA", "HT29", "MCF7", "MDAMB231", "PC3", "VCAP"],
               'genetic': ["A549", "A375", "AGS", "BICR6", "ES2", "HT29", "MCF7", "PC3", "U251MG", "YAPC"]
 	
 }
+
+splits_type = 'random'
 
 def compute_idcg(num_correct, num_nodes):
     """
@@ -46,15 +46,15 @@ def compute_idcg(num_correct, num_nodes):
         idcg += gain * discount
     return idcg
 
-for dataset_type in ['chemical', 'genetic']:
+for dataset_type in ['genetic', 'chemical']:
 	for selection_type in ['random', 'cancer_genes', 'cancer_targets', 'perturbed_genes']:
 	# for selection_type in ['perturbed_genes']:
-		#not including HA1E
-		for cell_line in cell_lines[dataset_type]:
-			for splits_type in ['random']:
+		for test_cell_line in cell_lines[dataset_type]:
 
+				train_cell_lines = list(set(cell_lines[dataset_type]) - set([test_cell_line]))
+	
 				#outdir
-				outdir = './results/mechanistic/baseline_random_{}/{}/{}/{}'.format(dataset_type, selection_type, cell_line, splits_type)
+				outdir = './results/mechanistic/baseline_random_{}/new_cell_line/{}/{}/{}'.format(dataset_type, selection_type, test_cell_line, splits_type)
 				os.makedirs(outdir, exist_ok=True)
 				log = open(osp.join(outdir, 'log.txt'), 'w')
 
@@ -65,17 +65,19 @@ for dataset_type in ['chemical', 'genetic']:
 				else:
 					base_path = "../../data/processed/torch_data/real_lognorm/"
 
-				path = osp.join(base_path, 'data_backward_{}.pt'.format(cell_line))
+				path = osp.join(base_path, 'data_backward_{}.pt'.format(test_cell_line))
 				dataset = torch.load(path)
 
 
-				if selection_type =='cancer_genes':
-					path = osp.join(base_path, 'data_forward_{}.pt'.format(cell_line))
-					dataset_f = torch.load(path)
-
+				if selection_type =='cancer_genes':	#loads genes from all other cell lines
 					gene_indices_to_choose_from = []
-					for d in dataset_f:
-						gene_indices_to_choose_from += torch.where(d.mutations)[0].numpy().tolist()
+			
+					for train_cell in train_cell_lines:
+						path = osp.join(base_path, 'data_forward_{}.pt'.format(train_cell))
+						dataset_f = torch.load(path)
+						
+						for d in dataset_f:
+							gene_indices_to_choose_from += torch.where(d.mutations)[0].numpy().tolist()
 
 					gene_indices_to_choose_from = list(set(gene_indices_to_choose_from))
 				
@@ -83,8 +85,10 @@ for dataset_type in ['chemical', 'genetic']:
 					#Gene indices to choose from: those which are targets of approved cancer drugs
 					drugs_and_targets = pd.read_csv('../../data/processed/nci/drugs_and_targets.csv', sep='\t')
 					gene_names_to_choose_from = []
-					for e in drugs_and_targets[drugs_and_targets['cell_line'] == cell_line]['targets'].tolist():
-						gene_names_to_choose_from += e.split(',') 
+					
+					for train_cell in train_cell_lines:
+						for e in drugs_and_targets[drugs_and_targets['cell_line'] == train_cell]['targets'].tolist():
+							gene_names_to_choose_from += e.split(',') 
 
 					gene_names_to_choose_from = list(set(gene_names_to_choose_from))
 					log.write('Number of cancer target names:\t{}\n'.format(len(gene_names_to_choose_from)))
@@ -102,16 +106,30 @@ for dataset_type in ['chemical', 'genetic']:
 					for gene in gene_names_to_choose_from:
 						if gene in dict_name_index:
 							log.write('{}\n'.format(gene))
+       
+       
+       
+				elif selection_type=='perturbed_genes': #set of genes perturbed in train cell line
+					gene_indices_to_choose_from = []
+			
+					for train_cell in train_cell_lines:
+						path = osp.join(base_path, 'data_backward_{}.pt'.format(train_cell))
+						dataset_b = torch.load(path)
+						
+						for d in dataset_b:
+							gene_indices_to_choose_from += torch.where(d.intervention)[0].numpy().tolist()
+
+					gene_indices_to_choose_from = list(set(gene_indices_to_choose_from))
+     
 
 					log.write('\n-----\n')
-     
-     
-     
 
-				splits = "../../data/processed/splits/{}/{}/{}/5fold/splits.pt".format(dataset_type, cell_line, splits_type)
-				splits = torch.load(splits)
+				#Test dataset (different cell line)
+				path = osp.join(base_path, 'data_backward_{}.pt'.format(test_cell_line))
+				dataset_new_cell_line = torch.load(path)
 
-				print('Starting eval')
+
+
 				#5 rounds
 				all_recall_at_1 = {'test':[]}
 				all_recall_at_10 = {'test':[]}
@@ -120,24 +138,13 @@ for dataset_type in ['chemical', 'genetic']:
 				all_rankings = {'test':[]}
 				all_rankings_dcg = {'test':[]}
 				all_perc_partially_accurate_predictions = {'test':[]}
-		
 				real_interventions = {1:[], 2:[], 3:[], 4:[], 5:[]}
 				retrieved_interventions = {1:[], 2:[], 3:[], 4:[], 5:[]}
 				
 				log = open(osp.join(outdir, 'log.txt'), 'w')
 
-				for split_index in splits.keys():
-					split = splits[split_index]
-     
-     
-					if selection_type=='perturbed_genes': #different set of genes per split (the ones in train set only)
-						gene_indices_to_choose_from = []
-						for i in split['train_index_backward']:
-							gene_indices_to_choose_from += torch.where(dataset[i].intervention)[0].numpy().tolist()
-       
-						gene_indices_to_choose_from = list(set(gene_indices_to_choose_from))
-
-
+				for split_index in range(1,6):
+					
 
 					#For each sample in the dataset, predict as intervention a random gene
 					recall_at_1 = []
@@ -146,18 +153,17 @@ for dataset_type in ['chemical', 'genetic']:
 					recall_at_1000 = []
 					ranking = []
 					rankings_dcg = []
-					# den_100 = []
 					n_non_zeros = 0
-				
-     
-					for i in split['test_index_backward']:
-						treated = dataset[i].treated.numpy()
-						correct_intervention = torch.where(dataset[i].intervention)[0].tolist()
-						diseased = dataset[i].diseased.numpy()
+					
+					for i in range(len(dataset_new_cell_line)):
+						treated = dataset_new_cell_line[i].treated.numpy()
+						correct_intervention = torch.where(dataset_new_cell_line[i].intervention)[0].tolist()
+						diseased = dataset_new_cell_line[i].diseased.numpy()
+						
 						if selection_type == 'random':
 							random_ranking_of_genes = [e for e in range(len(diseased))]
 							random.shuffle(random_ranking_of_genes)
-       
+						
 						elif selection_type == 'cancer_genes' or selection_type == 'cancer_targets' or selection_type == 'perturbed_genes':
 							random.shuffle(gene_indices_to_choose_from)
 							remaining_gene_indices = list(set([e for e in range(len(diseased))]) - set(gene_indices_to_choose_from))
@@ -166,7 +172,7 @@ for dataset_type in ['chemical', 'genetic']:
 
 						retrieved_intervention_indices = random_ranking_of_genes[0:len(correct_intervention)]
 						retrieved_interventions[split_index].append(retrieved_intervention_indices)
-						real_interventions[split_index].append(correct_intervention)	
+						real_interventions[split_index].append(correct_intervention)				
 
 						#Records recall@K
 						recall_at_1.append(len(set(random_ranking_of_genes[:1]).intersection(correct_intervention)) / len(correct_intervention))
@@ -179,9 +185,9 @@ for dataset_type in ['chemical', 'genetic']:
 						for ci in list(correct_intervention):
 							ranking.append(1 - (random_ranking_of_genes.index(ci) / num_nodes))
 		
-  
                   		#Ranking metric - DCG-style						
- 
+
+      
 						dcg = 0
 						for ci in list(correct_intervention):
 							# Get the rank of the current ground-truth intervention
@@ -194,10 +200,11 @@ for dataset_type in ['chemical', 'genetic']:
 						idcg = compute_idcg(len(correct_intervention), num_nodes)
 						ndcg = dcg / idcg if idcg > 0 else 0
 						rankings_dcg.append(ndcg)
-  
-  
-  
-  
+      
+      
+      
+      
+      
 						#Records number of partially accurate predictions
 						overlap = len(set(correct_intervention).intersection(random_ranking_of_genes[:len(correct_intervention)]))
 
@@ -210,11 +217,9 @@ for dataset_type in ['chemical', 'genetic']:
 					all_recall_at_100['test'].append(np.mean(recall_at_100))
 					all_recall_at_1000['test'].append(np.mean(recall_at_1000))
 					all_rankings['test'].append(np.mean(ranking))
-     
 					all_rankings_dcg['test'].append(np.mean(rankings_dcg))
-					all_perc_partially_accurate_predictions['test'].append(100 * n_non_zeros/len(split['test_index_backward']))
-		
-		
+					all_perc_partially_accurate_predictions['test'].append(100 * n_non_zeros/len(dataset_new_cell_line))
+
 					#Log results
 				log.write('\n\n----------------------\n')
 				log.write('\n\nTEST SET\n')
@@ -225,7 +230,7 @@ for dataset_type in ['chemical', 'genetic']:
 				log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions['test']), np.std(all_perc_partially_accurate_predictions['test'])))
 				log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings['test']), np.std(all_rankings['test'])))
 				log.write('ranking score - DCG: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings_dcg['test']), np.std(all_rankings_dcg['test'])))
-
+    
 				log.write('--------------------------\n')
 				log.write('All metric datapoints:\n')
 				log.write('recall@1: {}\n'.format(all_recall_at_1['test']))
@@ -238,8 +243,8 @@ for dataset_type in ['chemical', 'genetic']:
 
 	
 				log.close()
-	
-	
+    
+    
 				with open(osp.join(outdir, 'retrieved_interventions.pkl'), 'wb') as f:
 					pickle.dump(retrieved_interventions, f)
 				with open(osp.join(outdir, 'real_interventions.pkl'), 'wb') as f:
