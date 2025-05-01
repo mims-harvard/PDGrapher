@@ -49,6 +49,25 @@ cell_lines = sys.argv[2:]
 # Example: Print the list of cell lines
 print("Received cell lines:", cell_lines)
 
+def compute_idcg(num_correct, num_nodes):
+    """
+    Computes the Ideal Discounted Cumulative Gain (IDCG) for the given
+    number of correct interventions and total number of nodes.
+
+    Args:
+        num_correct (int): Number of correct interventions.
+        num_nodes (int): Total number of nodes.
+
+    Returns:
+        float: The IDCG value.
+    """
+    idcg = 0
+    for rank in range(1, num_correct + 1):  # Ideal ranking: 1 to num_correct
+        gain = 1 - (rank / num_nodes)  # Gain function
+        discount = 1 / np.log2(rank + 1)  # Logarithmic discount
+        idcg += gain * discount
+    return idcg
+    
 # Process each cell line (for demonstration purposes, we'll just print them)
 for cell_line in cell_lines:
     print(f"Processing cell line: {cell_line}")
@@ -62,6 +81,10 @@ for cell_line in cell_lines:
 
     global use_forward_data
     use_forward_data = True
+
+
+
+
 
     if data_type == 'chemical':
         if cell_line.split('_')[0] in ['HA1E', 'HT29', 'A375', 'HELA']:
@@ -128,7 +151,7 @@ for cell_line in cell_lines:
         dataset = Dataset(
             forward_path=None,
             backward_path="../data/processed/synthetic_lincs/chemical/missing_components/data_backward_synthetic_MDAMB231.pt",
-            splits_path="../data/processed/splits/synthetic_lincs/chemical/missing_components/random/5fold/splits.pt"
+            splits_path="../data/processed/splits/synthetic_lincs/chemical/missing_components_random/random/5fold/splits.pt"
         )
 
         
@@ -220,7 +243,6 @@ for cell_line in cell_lines:
             perc_partially_accurate_predictions = []
             rankings = []
             rankings_dcg = []
-            den_100 = []
             n_non_zeros = 0
 
 
@@ -228,6 +250,7 @@ for cell_line in cell_lines:
             for data in test_loader_backward:
                 pred_backward_m2 = model.perturbation_discovery(torch.concat([data.diseased.view(-1, 1).to(device), data.treated.view(-1, 1).to(device)], 1), data.batch.to(device), mutilate_mutations=data.mutations.to(device), threshold_input=thresholds)
                 out = pred_backward_m2
+                # import pdb; pdb.set_trace()
                                 
                 num_nodes = int(data.num_nodes / len(torch.unique(data.batch)))
 
@@ -240,9 +263,6 @@ for cell_line in cell_lines:
                 
                 
                 #Weighted truncated ranking metric
-                # k = 100
-                # top_k_weight = 1  # Weight for predictions within top k
-                # outside_k_weight = 0.1  # Reduced weight for predictions outside top k
                 
                 dcg = 0
                 for ci in list(correct_interventions):
@@ -252,18 +272,10 @@ for cell_line in cell_lines:
                     discount = 1 / np.log2(rank + 1)
                     dcg += gain * discount
                     
-                    # # Assign weight based on whether the rank is in the top k
-                    # if rank < k:
-                    #     weight = top_k_weight
-                    #     score = 1 - (rank / k)  # Adjust metric for top k
-                    # else:
-                    #     weight = outside_k_weight
-                    #     score = 1 - (rank / num_nodes)  # Keep the original scale for outside top k
-
-                    # Append weighted score
-                    # den_100.append(weight)
-                    
-                rankings_dcg.append(dcg)
+                #normalize
+                idcg = compute_idcg(len(correct_interventions), num_nodes)
+                ndcg = dcg / idcg if idcg > 0 else 0
+                rankings_dcg.append(ndcg)
                     
 
 
@@ -327,8 +339,10 @@ for cell_line in cell_lines:
                     discount = 1 / np.log2(rank + 1)
                     dcg += gain * discount
                     
-                    
-                rankings_dcg.append(dcg)
+                #normalize
+                idcg = compute_idcg(len(correct_interventions), num_nodes)
+                ndcg = dcg / idcg if idcg > 0 else 0
+                rankings_dcg.append(ndcg)
                 
                 
                 
