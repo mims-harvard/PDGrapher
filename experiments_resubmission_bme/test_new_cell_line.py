@@ -48,7 +48,16 @@ print("Received cell lines:", cell_lines)
 
 
 
-
+dict_cell_types = {'A549': 'lung',
+                    'A375': 'skin',
+                    'BT20': 'breast',
+                    'HA1E': 'liver',
+                    'HELA': 'cervix',
+                    'HT29': 'colon',
+                    'MCF7': 'breast',
+                    'MDAMB231': 'breast',
+                    'PC3': 'prostate',
+                    'VCAP': 'prostate'}
 
 
 
@@ -72,8 +81,12 @@ for cell_line in cell_lines:
     use_intervention_data = True #whether to use cycle loss
     current_date = datetime.now()
 
-    test_cell_lines = ["A549_corrected_pos_emb", "A375_corrected_pos_emb", "BT20_corrected_pos_emb", "HA1E_corrected_pos_emb", "HELA_corrected_pos_emb", "HT29_corrected_pos_emb", "MCF7_corrected_pos_emb", "MDAMB231_corrected_pos_emb", "PC3_corrected_pos_emb", "VCAP_corrected_pos_emb"]
-    test_cell_lines = list(set(test_cell_lines) - set(cell_line))
+    test_cell_lines = ["A549_corrected_pos_emb", "A375_corrected_pos_emb", "BT20_corrected_pos_emb", "HELA_corrected_pos_emb", "HT29_corrected_pos_emb", "MCF7_corrected_pos_emb", "MDAMB231_corrected_pos_emb", "PC3_corrected_pos_emb", "VCAP_corrected_pos_emb"]
+    test_cell_lines.remove(cell_line)
+    
+    current_cell = dict_cell_types[cell_line.split('_')[0]]
+    
+    test_cell_lines = [e for e in test_cell_lines if dict_cell_types[e.split('_')[0]] != current_cell]
     
     paths = glob('results/chemical/{}/*'.format(cell_line))
     
@@ -85,7 +98,7 @@ for cell_line in cell_lines:
         n_layers_gnn = int(path.split('/')[-1].split('_')[2])
 
 
-        log = open(osp.join(outdir, 'final_performance_metrics_new_cell_lines.txt'), 'w')
+        log = open(osp.join(outdir, 'final_performance_metrics_new_cell_lines_filtering_similar.txt'), 'w')
 
         for test_cell_line in test_cell_lines:
     
@@ -108,6 +121,7 @@ for cell_line in cell_lines:
             all_recall_at_1000 = []
             all_perc_partially_accurate_predictions = []
             all_rankings = []
+            all_rankings_dcg = []
 
 
 
@@ -158,6 +172,7 @@ for cell_line in cell_lines:
                 recall_at_1000 = []
                 perc_partially_accurate_predictions = []
                 rankings = []
+                rankings_dcg = []
                 n_non_zeros = 0
 
 
@@ -174,7 +189,20 @@ for cell_line in cell_lines:
 
                     for ci in list(correct_interventions):
                         rankings.append(1 - (predicted_interventions.index(ci) / num_nodes))
-                    
+                
+                    #Weighted truncated ranking metric 
+                    dcg = 0
+                    for ci in list(correct_interventions):
+                        # Get the rank of the current ground-truth intervention
+                        rank = predicted_interventions.index(ci) + 1 #1-based indexing for CDG
+                        gain = 1 - (rank / num_nodes)
+                        discount = 1 / np.log2(rank + 1)
+                        dcg += gain * discount
+                        
+                        
+                    rankings_dcg.append(dcg)                    
+                        
+
                     recall_at_1.append(len(set(predicted_interventions[:1]).intersection(correct_interventions)) / len(correct_interventions))
                     recall_at_10.append(len(set(predicted_interventions[:10]).intersection(correct_interventions)) / len(correct_interventions))
                     recall_at_100.append(len(set(predicted_interventions[:100]).intersection(correct_interventions)) / len(correct_interventions))
@@ -192,6 +220,7 @@ for cell_line in cell_lines:
                 all_recall_at_100.append(np.mean(recall_at_100))
                 all_recall_at_1000.append(np.mean(recall_at_1000))
                 all_rankings.append(np.mean(rankings))
+                all_rankings_dcg.append(np.mean(rankings_dcg))
                 all_perc_partially_accurate_predictions.append(100 * n_non_zeros/len(test_loader_backward))
                 print('fold {}/5'.format(fold))
 
@@ -207,6 +236,7 @@ for cell_line in cell_lines:
             log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000), np.std(all_recall_at_1000)))
             log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions), np.std(all_perc_partially_accurate_predictions)))
             log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings), np.std(all_rankings)))
+            log.write('ranking score - DCG: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings_dcg), np.std(all_rankings_dcg)))
 
             log.write('--------------------------\n')
             log.write('All metric datapoints:\n')
@@ -216,6 +246,8 @@ for cell_line in cell_lines:
             log.write('recall@1000: {}\n'.format(all_recall_at_1000))
             log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions))
             log.write('ranking score: {}\n'.format(all_rankings))
+            log.write('ranking score - DCG: {}\n'.format(all_rankings_dcg))
+            
             log.write('--------------------------\n\n')
 
         log.close()

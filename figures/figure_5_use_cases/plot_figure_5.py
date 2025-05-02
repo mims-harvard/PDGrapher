@@ -17,6 +17,15 @@ import numpy as np
 from collections import defaultdict
 import pickle
 
+from matplotlib import font_manager
+font_dirs = ['/home/gonzag46/.fonts']
+font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
+for font_file in font_files:
+    font_manager.fontManager.addfont(font_file)
+plt.rcParams['font.family'] = 'Arial'
+plt.rcParams['pdf.fonttype'] = 42  # Output Type 42 (TrueType), editable in Illustrator
+
+
 outdir = 'processed'
 os.makedirs(outdir, exist_ok=True)
 
@@ -207,7 +216,7 @@ palette = {
 
 with sns.plotting_context(plotting_context):
     # Plotting with Seaborn
-    fig, ax = plt.subplots(figsize=(7.35, 3.4))
+    fig, ax = plt.subplots(figsize=(3.543, 2.19))
     for method in methods:
         # Plot the line for average recall
         sns.lineplot(x=ks, y=average_recalls[method], color=palette[method], marker='o', label=method, ax=ax, markersize=4)
@@ -220,16 +229,16 @@ with sns.plotting_context(plotting_context):
     ax.legend(handles[:len(methods)], labels[:len(methods)], loc='upper right', frameon=False, title=None)
     plt.legend(frameon=False, title=None, bbox_to_anchor=(0.3, 1))
     # Formatting the plot
-    plt.xlabel('K (Number of top predicted genes considered)')
-    plt.ylabel('Average recall across cell lines')
+    plt.xlabel('Predicted gene rank')
+    plt.ylabel('Recall')
     plt.grid(False)
     sns.despine()
-    plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.16)
+    plt.subplots_adjust(left=0.12, right=0.95, top=0.9, bottom=0.18)
     # Show the plot
     plt.savefig(osp.join(outdir, 'recall_targets_approved_drugs.pdf'))
     plt.close()
     
-    
+# import pdb; pdb.set_trace()
     
     
     

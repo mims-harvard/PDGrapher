@@ -49,6 +49,25 @@ cell_lines = sys.argv[2:]
 # Example: Print the list of cell lines
 print("Received cell lines:", cell_lines)
 
+def compute_idcg(num_correct, num_nodes):
+    """
+    Computes the Ideal Discounted Cumulative Gain (IDCG) for the given
+    number of correct interventions and total number of nodes.
+
+    Args:
+        num_correct (int): Number of correct interventions.
+        num_nodes (int): Total number of nodes.
+
+    Returns:
+        float: The IDCG value.
+    """
+    idcg = 0
+    for rank in range(1, num_correct + 1):  # Ideal ranking: 1 to num_correct
+        gain = 1 - (rank / num_nodes)  # Gain function
+        discount = 1 / np.log2(rank + 1)  # Logarithmic discount
+        idcg += gain * discount
+    return idcg
+    
 # Process each cell line (for demonstration purposes, we'll just print them)
 for cell_line in cell_lines:
     print(f"Processing cell line: {cell_line}")
@@ -62,6 +81,10 @@ for cell_line in cell_lines:
 
     global use_forward_data
     use_forward_data = True
+
+
+
+
 
     if data_type == 'chemical':
         if cell_line.split('_')[0] in ['HA1E', 'HT29', 'A375', 'HELA']:
@@ -119,13 +142,35 @@ for cell_line in cell_lines:
         #Modify based on folder name
         paths = glob('results/synthetic_lincs/confounders/*/*')    
 
+
+
+    elif data_type == 'synthetic_missing_components_random':
+        use_forward_data = False
+
+        #Dataset
+        dataset = Dataset(
+            forward_path=None,
+            backward_path="../data/processed/synthetic_lincs/chemical/missing_components/data_backward_synthetic_MDAMB231.pt",
+            splits_path="../data/processed/splits/synthetic_lincs/chemical/missing_components_random/random/5fold/splits.pt"
+        )
+
+        
+
+        #Modify based on folder name
+        paths = glob('results/synthetic_lincs/data_missing_components_random/*/*')  
+
+
+
     for path in paths:
         
         if data_type == 'synthetic_missing_components':
             fraction = path.split('/')[-2].split('_')[1]
             edge_index = torch.load(f"../data/processed/synthetic_lincs/chemical/missing_components/edge_index_MDAMB231_fraction_{fraction}.pt")
 
-
+        if data_type == 'synthetic_missing_components_random':
+            fraction = path.split('/')[-2].split('_')[1]
+            edge_index = torch.load(f"../data/processed/synthetic_lincs/chemical/missing_components_random/edge_index_MDAMB231_fraction_{fraction}.pt")
+            
         if data_type == 'synthetic_confounders':
             fraction = path.split('/')[-2].split('_')[1]
             #Dataset
@@ -147,6 +192,7 @@ for cell_line in cell_lines:
         all_recall_at_1000 = {'test':[], 'val':[]}
         all_perc_partially_accurate_predictions = {'test':[], 'val':[]}
         all_rankings = {'test':[], 'val':[]}
+        all_rankings_dcg = {'test':[], 'val':[]}
 
 
 
@@ -196,6 +242,7 @@ for cell_line in cell_lines:
             recall_at_1000 = []
             perc_partially_accurate_predictions = []
             rankings = []
+            rankings_dcg = []
             n_non_zeros = 0
 
 
@@ -203,15 +250,35 @@ for cell_line in cell_lines:
             for data in test_loader_backward:
                 pred_backward_m2 = model.perturbation_discovery(torch.concat([data.diseased.view(-1, 1).to(device), data.treated.view(-1, 1).to(device)], 1), data.batch.to(device), mutilate_mutations=data.mutations.to(device), threshold_input=thresholds)
                 out = pred_backward_m2
+                # import pdb; pdb.set_trace()
                                 
                 num_nodes = int(data.num_nodes / len(torch.unique(data.batch)))
-                
-                
+
+
                 correct_interventions = set(torch.where(data.intervention.detach().cpu().view(-1, num_nodes))[1].tolist())
                 predicted_interventions = torch.argsort(out.detach().cpu().view(-1, num_nodes), descending=True)[0, :].tolist()
 
                 for ci in list(correct_interventions):
                     rankings.append(1 - (predicted_interventions.index(ci) / num_nodes))
+                
+                
+                #Weighted truncated ranking metric
+                
+                dcg = 0
+                for ci in list(correct_interventions):
+                    # Get the rank of the current ground-truth intervention
+                    rank = predicted_interventions.index(ci) + 1 #1-based indexing for CDG
+                    gain = 1 - (rank / num_nodes)
+                    discount = 1 / np.log2(rank + 1)
+                    dcg += gain * discount
+                    
+                #normalize
+                idcg = compute_idcg(len(correct_interventions), num_nodes)
+                ndcg = dcg / idcg if idcg > 0 else 0
+                rankings_dcg.append(ndcg)
+                    
+
+
                 
                 recall_at_1.append(len(set(predicted_interventions[:1]).intersection(correct_interventions)) / len(correct_interventions))
                 recall_at_10.append(len(set(predicted_interventions[:10]).intersection(correct_interventions)) / len(correct_interventions))
@@ -230,6 +297,8 @@ for cell_line in cell_lines:
             all_recall_at_100['test'].append(np.mean(recall_at_100))
             all_recall_at_1000['test'].append(np.mean(recall_at_1000))
             all_rankings['test'].append(np.mean(rankings))
+            all_rankings_dcg['test'].append(np.mean(rankings_dcg))
+            
             all_perc_partially_accurate_predictions['test'].append(100 * n_non_zeros/len(test_loader_backward))
             print('fold {}/5'.format(fold))
 
@@ -243,6 +312,8 @@ for cell_line in cell_lines:
             recall_at_1000 = []
             perc_partially_accurate_predictions = []
             rankings = []
+            rankings_dcg = []
+            # den_100 = []
             n_non_zeros = 0
             
             
@@ -258,6 +329,22 @@ for cell_line in cell_lines:
 
                 for ci in list(correct_interventions):
                     rankings.append(1 - (predicted_interventions.index(ci) / num_nodes))
+                
+                
+                dcg = 0
+                for ci in list(correct_interventions):
+                    # Get the rank of the current ground-truth intervention
+                    rank = predicted_interventions.index(ci) + 1 #1-based indexing for CDG
+                    gain = 1 - (rank / num_nodes)
+                    discount = 1 / np.log2(rank + 1)
+                    dcg += gain * discount
+                    
+                #normalize
+                idcg = compute_idcg(len(correct_interventions), num_nodes)
+                ndcg = dcg / idcg if idcg > 0 else 0
+                rankings_dcg.append(ndcg)
+                
+                
                 
                 recall_at_1.append(len(set(predicted_interventions[:1]).intersection(correct_interventions)) / len(correct_interventions))
                 recall_at_10.append(len(set(predicted_interventions[:10]).intersection(correct_interventions)) / len(correct_interventions))
@@ -276,6 +363,8 @@ for cell_line in cell_lines:
             all_recall_at_100['val'].append(np.mean(recall_at_100))
             all_recall_at_1000['val'].append(np.mean(recall_at_1000))
             all_rankings['val'].append(np.mean(rankings))
+            all_rankings_dcg['val'].append(np.mean(rankings_dcg))
+            
             all_perc_partially_accurate_predictions['val'].append(100 * n_non_zeros/len(test_loader_backward))
             print('fold {}/5'.format(fold))
 
@@ -291,6 +380,7 @@ for cell_line in cell_lines:
         log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000['val']), np.std(all_recall_at_1000['val'])))
         log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions['val']), np.std(all_perc_partially_accurate_predictions['val'])))
         log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings['val']), np.std(all_rankings['val'])))
+        log.write('ranking score - DCG: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings_dcg['val']), np.std(all_rankings_dcg['val'])))
 
         log.write('--------------------------\n')
         log.write('All metric datapoints:\n')
@@ -300,6 +390,7 @@ for cell_line in cell_lines:
         log.write('recall@1000: {}\n'.format(all_recall_at_1000['val']))
         log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions['val']))
         log.write('ranking score: {}\n'.format(all_rankings['val']))
+        log.write('ranking score - DCG: {}\n'.format(all_rankings_dcg['val']))
 
         log.write('\n\n----------------------\n')
         log.write('\n\nTEST SET\n')
@@ -309,6 +400,7 @@ for cell_line in cell_lines:
         log.write('recall@1000: {:.4f}±{:.4f}\n'.format(np.mean(all_recall_at_1000['test']), np.std(all_recall_at_1000['test'])))
         log.write('percentage of samples with partially accurate predictions: {:.2f}±{:.2f}\n'.format(np.mean(all_perc_partially_accurate_predictions['test']), np.std(all_perc_partially_accurate_predictions['test'])))
         log.write('ranking score: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings['test']), np.std(all_rankings['test'])))
+        log.write('ranking score - DCG: {:.2f}±{:.2f}\n'.format(np.mean(all_rankings_dcg['test']), np.std(all_rankings_dcg['test'])))
 
         log.write('--------------------------\n')
         log.write('All metric datapoints:\n')
@@ -318,6 +410,7 @@ for cell_line in cell_lines:
         log.write('recall@1000: {}\n'.format(all_recall_at_1000['test']))
         log.write('percentage of samples with partially accurate predictions: {}\n'.format(all_perc_partially_accurate_predictions['test']))
         log.write('ranking score: {}\n'.format(all_rankings['test']))
+        log.write('ranking score - DCG: {}\n'.format(all_rankings_dcg['test']))
 
         log.close()
 
