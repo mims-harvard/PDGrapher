@@ -29,8 +29,7 @@ plt.rcParams['pdf.fonttype'] = 42  # Output Type 42 (TrueType), editable in Illu
 outdir = 'processed'
 os.makedirs(outdir, exist_ok=True)
 
-
-specific_K_values = [1, 10, 20, 30, 40, 50, 100, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
+specific_K_values = [1, 10, 20, 30, 40, 50, 100,200, 300, 400, 500, 1000, 2000, 4000, 6000, 8000, 10000, 10716]
 cancer_types = {'A549': 'lung', 'MCF7': 'breast', 'MDAMB231': 'breast', 'BT20':'breast', 'PC3': 'prostate', 'VCAP': 'prostate'}
 
 
@@ -137,8 +136,8 @@ for cell_line in cell_lines:
 
 
     # Initialize a list to store recall values at each K
-    recall_at_k = []
-    recall_at_k_random = []
+    recall_at_k = {}
+    recall_at_k_random = {}
     # Initialize a list to store when each drug reaches recall = 1
     highlight_points = []
     highlight_points_full = []
@@ -167,8 +166,8 @@ for cell_line in cell_lines:
         average_recall = np.mean(recalls)
         average_recall_random = np.mean(recalls_random)
         if k in specific_K_values:
-            recall_at_k.append((k, average_recall))
-            recall_at_k_random.append((k, average_recall_random))
+            recall_at_k[k] = average_recall
+            recall_at_k_random[k] = average_recall_random
         
         
     recall_dict[cell_line] = {'PDGrapher':recall_at_k, 'Random': recall_at_k_random}
@@ -200,10 +199,10 @@ average_recalls = {method: [] for method in methods}
 
 # Calculate average recall for each method at each K value
 for method in methods:
-    for k_index in range(len(ks)):
+    for k_index in ks:
         recalls = []
         for cell_line in recall_dict.keys():
-            recalls.append(recall_dict[cell_line][method][k_index][1])
+            recalls.append(recall_dict[cell_line][method][k_index])
         average_recalls[method].append(np.mean(recalls))
 
 # Define the color palette
@@ -222,7 +221,7 @@ with sns.plotting_context(plotting_context):
         sns.lineplot(x=ks, y=average_recalls[method], color=palette[method], marker='o', label=method, ax=ax, markersize=4)
         # Plot individual points for each cell line
         for cell_line in recall_dict.keys():
-            cell_line_recalls = [recall_dict[cell_line][method][k_index][1] for k_index in range(len(ks))]
+            cell_line_recalls = [recall_dict[cell_line][method][k_index] for k_index in ks]
             sns.scatterplot(x=ks, y=cell_line_recalls, color=palette[method], alpha=0.5, ax=ax, s=10)
     # Ensure the legend is correctly formatted without duplication
     handles, labels = ax.get_legend_handles_labels()
@@ -240,7 +239,8 @@ with sns.plotting_context(plotting_context):
     
 # import pdb; pdb.set_trace()
     
-    
+with open(osp.join(outdir, 'recall_dict.pkl'), 'wb') as f:
+    pickle.dump(recall_dict, f)
     
     
     

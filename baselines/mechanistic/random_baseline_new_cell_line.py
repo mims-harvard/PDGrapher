@@ -21,7 +21,7 @@ import os
 import pickle
 
 cell_lines = {'chemical': ["A549", "A375", "BT20", "HELA", "HT29", "MCF7", "MDAMB231", "PC3", "VCAP"],
-              'genetic': ["A549", "A375", "AGS", "BICR6", "ES2", "HT29", "MCF7", "PC3", "U251MG", "YAPC"]
+				'genetic': ["A549", "A375", "AGS", "BICR6", "ES2", "HT29", "MCF7", "PC3", "U251MG", "YAPC"]
 	
 }
 
@@ -46,15 +46,20 @@ def compute_idcg(num_correct, num_nodes):
         idcg += gain * discount
     return idcg
 
-for dataset_type in ['genetic', 'chemical']:
-	for selection_type in ['random', 'cancer_genes', 'cancer_targets', 'perturbed_genes']:
-	# for selection_type in ['perturbed_genes']:
+# for dataset_type in ['genetic', 'chemical']:
+for dataset_type in ['chemical']:
+    # for selection_type in ['random', 'cancer_genes', 'cancer_targets', 'perturbed_genes']:
+	for selection_type in ['cancer_genes', 'cancer_targets', 'perturbed_genes']:
 		for test_cell_line in cell_lines[dataset_type]:
-
-				train_cell_lines = list(set(cell_lines[dataset_type]) - set([test_cell_line]))
+			for train_cell_line in cell_lines[dataset_type]:
+				if test_cell_line == train_cell_line:
+					continue
+				
+				
+				train_cell_lines = [train_cell_line]
 	
 				#outdir
-				outdir = './results/mechanistic/baseline_random_{}/new_cell_line/{}/{}/{}'.format(dataset_type, selection_type, test_cell_line, splits_type)
+				outdir = './results/mechanistic/baseline_random_{}/new_cell_line/{}/{}_{}/{}'.format(dataset_type, selection_type, train_cell_line, test_cell_line, splits_type)
 				os.makedirs(outdir, exist_ok=True)
 				log = open(osp.join(outdir, 'log.txt'), 'w')
 
@@ -69,6 +74,8 @@ for dataset_type in ['genetic', 'chemical']:
 				dataset = torch.load(path)
 
 
+
+
 				if selection_type =='cancer_genes':	#loads genes from all other cell lines
 					gene_indices_to_choose_from = []
 			
@@ -81,6 +88,8 @@ for dataset_type in ['genetic', 'chemical']:
 
 					gene_indices_to_choose_from = list(set(gene_indices_to_choose_from))
 				
+    
+    
 				elif selection_type == 'cancer_targets':
 					#Gene indices to choose from: those which are targets of approved cancer drugs
 					drugs_and_targets = pd.read_csv('../../data/processed/nci/drugs_and_targets.csv', sep='\t')
@@ -106,9 +115,7 @@ for dataset_type in ['genetic', 'chemical']:
 					for gene in gene_names_to_choose_from:
 						if gene in dict_name_index:
 							log.write('{}\n'.format(gene))
-       
-       
-       
+
 				elif selection_type=='perturbed_genes': #set of genes perturbed in train cell line
 					gene_indices_to_choose_from = []
 			
@@ -120,13 +127,15 @@ for dataset_type in ['genetic', 'chemical']:
 							gene_indices_to_choose_from += torch.where(d.intervention)[0].numpy().tolist()
 
 					gene_indices_to_choose_from = list(set(gene_indices_to_choose_from))
-     
 
 					log.write('\n-----\n')
+
 
 				#Test dataset (different cell line)
 				path = osp.join(base_path, 'data_backward_{}.pt'.format(test_cell_line))
 				dataset_new_cell_line = torch.load(path)
+				splits_file	= f"../../data/processed/splits/{dataset_type}/{test_cell_line.split('_')[0]}/random/5fold/splits.pt"
+				splits = torch.load(splits_file)
 
 
 
@@ -155,7 +164,11 @@ for dataset_type in ['genetic', 'chemical']:
 					rankings_dcg = []
 					n_non_zeros = 0
 					
-					for i in range(len(dataset_new_cell_line)):
+					
+					split = splits[split_index]
+					test_samples_indices = split['test_index_backward'].tolist()
+
+					for i in test_samples_indices:
 						treated = dataset_new_cell_line[i].treated.numpy()
 						correct_intervention = torch.where(dataset_new_cell_line[i].intervention)[0].tolist()
 						diseased = dataset_new_cell_line[i].diseased.numpy()
@@ -185,9 +198,9 @@ for dataset_type in ['genetic', 'chemical']:
 						for ci in list(correct_intervention):
 							ranking.append(1 - (random_ranking_of_genes.index(ci) / num_nodes))
 		
-                  		#Ranking metric - DCG-style						
+					#Ranking metric - DCG-style						
 
-      
+
 						dcg = 0
 						for ci in list(correct_intervention):
 							# Get the rank of the current ground-truth intervention
@@ -200,11 +213,7 @@ for dataset_type in ['genetic', 'chemical']:
 						idcg = compute_idcg(len(correct_intervention), num_nodes)
 						ndcg = dcg / idcg if idcg > 0 else 0
 						rankings_dcg.append(ndcg)
-      
-      
-      
-      
-      
+
 						#Records number of partially accurate predictions
 						overlap = len(set(correct_intervention).intersection(random_ranking_of_genes[:len(correct_intervention)]))
 

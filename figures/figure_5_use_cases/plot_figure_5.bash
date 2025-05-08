@@ -2,11 +2,11 @@
 #BSUB -J plot_figure_5    # Job name
 #BSUB -n 20                              # number of processors
 #BSUB -q long                            # Select queue
-#BSUB -o logs_shpc/output-figure3-%J.out    # Output file
-#BSUB -e logs_shpc/output-figure3-%J.err    # Error file
+#BSUB -o /home/gonzag46/git/PDGrapher/figures/figure_5_use_cases/output-figure3-%J.out    # Output file
+#BSUB -e /home/gonzag46/git/PDGrapher/figures/figure_5_use_cases/output-figure3-%J.err    # Error file
 #BSUB -M 5G                              # memory in MB
-#BSUB -u gonzalez.guadalupe@gene.com                        # Email address for notifications
 #BSUB -N                                 # send output by email 
+#BSUB -u gonzalez.guadalupe@gene.com                        # Email address for notifications
 #BSUB -W 10:00                            # Job timelimit
 
 
