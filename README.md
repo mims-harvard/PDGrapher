@@ -1,5 +1,5 @@
 # PDGrapher
-
+![](https://github.com/mism-harvard/PDGrapher/figures/Figure1.jpg)
 ## Project structure
 
 The project consists of next folders:
