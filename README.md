@@ -64,4 +64,6 @@ Documentation can be build with next two commands:
 Then, the documentation can be accessed locally by going to `docs/build/html/index.html`
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
 
+## Questions
+Please leave a Github issue or contact [Guadalupe Gonzalez](mailto:ggonzalezp16@gmail.com), [Xiang Lin](mailto:xianglin226@gmail.com), or [Marinka Zitnik](mailto:marinka@zitnik.si)  
 
