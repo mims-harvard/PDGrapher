@@ -1,6 +1,6 @@
 # Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks
-[![ProjectPage](https://img.shields.io/badge/Project-PDGrapher-red)](https://zitniklab.hms.harvard.edu/projects/PDGrapher/) [![CodePage](https://img.shields.io/badge/Code-GitHub-orange)](https://github.com/mims-harvard/PDGrapher) [![Paper](https://img.shields.io/badge/Paper-BioRxiv-green)](https://www.biorxiv.org/content/10.1101/2024.01.03.573985v2) [![License](https://img.shields.io/badge/license-MIT-blue)] 
-[![Data](https://img.shields.io/badge/Data-Links-purple)](https://github.com/mims-harvard/PDGrapher/tree/main/data)
+[![ProjectPage](https://img.shields.io/badge/Project-PDGrapher-red)](https://zitniklab.hms.harvard.edu/projects/PDGrapher/) [![CodePage](https://img.shields.io/badge/Code-GitHub-orange)](https://github.com/mims-harvard/PDGrapher) [![Paper](https://img.shields.io/badge/Paper-BioRxiv-green)](https://www.biorxiv.org/content/10.1101/2024.01.03.573985v2) [![Data](https://img.shields.io/badge/Data-Links-purple)](https://github.com/mims-harvard/PDGrapher/tree/main/data) ![License](https://img.shields.io/badge/license-MIT-blue) 
+
 
 
 [Guadalupe Gonzalez*](https://www.gene.com/scientists/our-scientists/guadalupe-gonzalez), [Xiang Lin*](https://scholar.google.com/citations?user=SKdT80YAAAAJ&hl=en), [Isuru Herath](https://scholar.google.com/citations?user=F-RC5k0AAAAJ&hl=en), [Kirill Veselkov](https://scholar.google.com/citations?user=0n-5UGYAAAAJ&hl=en),
