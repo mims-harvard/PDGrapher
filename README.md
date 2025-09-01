@@ -64,6 +64,11 @@ Documentation can be build with next two commands:
 Then, the documentation can be accessed locally by going to `docs/build/html/index.html`
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
 
+## Notebooks
+Train PDGrapher on chemical dataset [jupyter notebook](./notebooks/train_chemical.ipynb)  
+Train PDGrapher on genetic dataset [jupyter notebook](./notebooks/train_genetic.ipynb)  
+Test PDGrapher on chemical/genetic dataset [jupyter notebook](./notebooks/test_PDG.ipynb)  
+
 ## Reference
 @article{gonzalez2025combinatorial,  
   title={Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks},  
