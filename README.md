@@ -4,7 +4,7 @@
 [Guadalupe Gonzalez*](https://www.gene.com/scientists/our-scientists/guadalupe-gonzalez), [Xiang Lin*](https://scholar.google.com/citations?user=SKdT80YAAAAJ&hl=en), [Isuru Herath](https://scholar.google.com/citations?user=F-RC5k0AAAAJ&hl=en), [Kirill Veselkov](https://scholar.google.com/citations?user=0n-5UGYAAAAJ&hl=en),
 [Michael Bronstein](https://scholar.google.com/citations?user=UU3N6-UAAAAJ&hl=en), and [Marinka Zitnik](https://dbmi.hms.harvard.edu/people/marinka-zitnik)
 
-![](https://github.com/mims-harvard/PDGrapher/blob/main/figures/figure_1.jpg)
+![](https://github.com/mims-harvard/PDGrapher/blob/main/figures/figure1.jpg)
 ## Project structure
 
 The project consists of next folders:
