@@ -65,13 +65,13 @@ Then, the documentation can be accessed locally by going to `docs/build/html/ind
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
 
 ## Reference
-@article{gonzalez2025combinatorial,
-  title={Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks},
-  author={Gonzalez, Guadalupe and Lin, Xiang and Herath, Isuru and Veselkov, Kirill and Bronstein, Michael and Zitnik, Marinka},
-  journal={bioRxiv},
-  pages={2024--01},
-  year={2025}
-}
+@article{gonzalez2025combinatorial,  
+  title={Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks},  
+  author={Gonzalez, Guadalupe and Lin, Xiang and Herath, Isuru and Veselkov, Kirill and Bronstein, Michael and Zitnik, Marinka},  
+  journal={bioRxiv},  
+  pages={2024--01},  
+  year={2025}  
+}  
 
 ## License
 The code in this package is licensed under the MIT License.
