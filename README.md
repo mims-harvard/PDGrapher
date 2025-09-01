@@ -1,4 +1,9 @@
-# PDGrapher
+# Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks
+[![ProjectPage](https://img.shields.io/badge/project-PDGrapher-red)](https://zitniklab.hms.harvard.edu/projects/PDGrapher/) [![CodePage](https://img.shields.io/badge/Code-GitHub-orange)](https://github.com/mims-harvard/PDGrapher) [![Paper](https://img.shields.io/badge/Paper-BioRxiv-green)](https://www.biorxiv.org/content/10.1101/2024.01.03.573985v2)![License](https://img.shields.io/badge/license-MIT-blue) 
+
+[Guadalupe Gonzalez*](https://www.gene.com/scientists/our-scientists/guadalupe-gonzalez), [Xiang Lin*](https://scholar.google.com/citations?user=SKdT80YAAAAJ&hl=en), [Isuru Herath](https://scholar.google.com/citations?user=F-RC5k0AAAAJ&hl=en), [Kirill Veselkov](https://scholar.google.com/citations?user=0n-5UGYAAAAJ&hl=en),
+[Michael Bronstein](https://scholar.google.com/citations?user=UU3N6-UAAAAJ&hl=en), and [Marinka Zitnik](https://dbmi.hms.harvard.edu/people/marinka-zitnik)
+
 ![](https://github.com/mims-harvard/PDGrapher/blob/main/figures/figure_1.jpg)
 ## Project structure
 
