@@ -8,7 +8,7 @@
 
 project = "PDGrapher"
 copyright = "2023, ggonzalezp"
-author = "ggonzalezp, dmohorcic, davidzqhuang"
+author = "ggonzalezp, dmohorcic, xianglin226"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

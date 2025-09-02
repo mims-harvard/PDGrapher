@@ -1,9 +1,9 @@
 # Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks
-[![ProjectPage](https://img.shields.io/badge/Project-PDGrapher-red)](https://zitniklab.hms.harvard.edu/projects/PDGrapher/) [![CodePage](https://img.shields.io/badge/Code-GitHub-orange)](https://github.com/mims-harvard/PDGrapher) [![Paper](https://img.shields.io/badge/Paper-BioRxiv-green)](https://www.biorxiv.org/content/10.1101/2024.01.03.573985v2) [![Data](https://img.shields.io/badge/Data-Links-purple)](https://github.com/mims-harvard/PDGrapher/tree/main/data) ![License](https://img.shields.io/badge/license-MIT-blue) 
+[![ProjectPage](https://img.shields.io/badge/Project-PDGrapher-red)](https://zitniklab.hms.harvard.edu/projects/PDGrapher/) [![CodePage](https://img.shields.io/badge/Code-GitHub-orange)](https://github.com/mims-harvard/PDGrapher) [![Paper](https://img.shields.io/badge/Paper-BioRxiv-green)](https://www.biorxiv.org/content/10.1101/2024.01.03.573985v5) [![Data](https://img.shields.io/badge/Data-Links-purple)](https://github.com/mims-harvard/PDGrapher/tree/main/data) ![License](https://img.shields.io/badge/license-MIT-blue) 
 
 
 
-[Guadalupe Gonzalez*](https://www.gene.com/scientists/our-scientists/guadalupe-gonzalez), [Xiang Lin*](https://scholar.google.com/citations?user=SKdT80YAAAAJ&hl=en), [Isuru Herath](https://scholar.google.com/citations?user=F-RC5k0AAAAJ&hl=en), [Kirill Veselkov](https://scholar.google.com/citations?user=0n-5UGYAAAAJ&hl=en),
+[Guadalupe Gonzalez*](https://www.guadalupegonzalez.io/), [Xiang Lin*](https://scholar.google.com/citations?user=SKdT80YAAAAJ&hl=en), [Isuru Herath](https://scholar.google.com/citations?user=F-RC5k0AAAAJ&hl=en), [Kirill Veselkov](https://scholar.google.com/citations?user=0n-5UGYAAAAJ&hl=en),
 [Michael Bronstein](https://scholar.google.com/citations?user=UU3N6-UAAAAJ&hl=en), and [Marinka Zitnik](https://dbmi.hms.harvard.edu/people/marinka-zitnik)
 
 ![](https://github.com/mims-harvard/PDGrapher/blob/main/figures/figure1.jpg)
@@ -13,7 +13,6 @@ The project consists of next folders:
 - [data](data/) contains all of the data on which our models were built. On how to obtain this data, refer to [Data](#data) section,
 - [docs](docs/) contains documentation, built with 'sphinx',
 - [src/pdgrapher](src/pdgrapher/) contains the source code for PDGrapher,
-- [examples](examples/) contains some examples that demonstrate the use of PDGrapher library, read the [README.md](examples/README.md) in examples folder for more instructions,
 - [tests](tests/) contains unit and integration tests.
 
 ## Virtual environment
@@ -40,16 +39,37 @@ pip install lightning==1.9.5
 
 For processed data, download the compressed folders and place them in `data/processed/` with the following commands:
 
-```
-cd data
-mkdir processed
-cd processed
-wget https://figshare.com/ndownloader/files/43624557
-tar -xzvf torch_data.tar.gz
-cd ../
-wget https://figshare.com/ndownloader/files/43632327
+### Download genetic and splits data from Zenodo
+```bash
+cd data/processed
+# Download splits and genetic data
+wget -O splits.tar.gz "https://zenodo.org/api/records/15375990/files/splits.tar.gz/content"
+wget -O torch_data_genetic.tar.gz "https://zenodo.org/api/records/15375990/files/torch_data_genetic.tar.gz/content"
+
+# Extract splits data
 tar -xzvf splits.tar.gz
+
+# Create torch_data directory and extract genetic data into it
+mkdir -p torch_data
+cd torch_data
+tar -xzvf ../torch_data_genetic.tar.gz
+cd ..
 ```
+
+### Download chemical data from Zenodo
+```bash
+# Download chemical data (run from data/processed directory)
+wget -O torch_data_chemical.tar.gz "https://zenodo.org/api/records/15390483/files/torch_data_chemical.tar.gz/content"
+
+# Extract chemical torch data into torch_data directory
+cd torch_data
+tar -xzvf ../torch_data_chemical.tar.gz
+cd ..
+```
+
+### Data Sources
+- **Genetic data and splits**: [https://zenodo.org/records/15375990](https://zenodo.org/records/15375990)
+- **Chemical data**: [https://zenodo.org/records/15390483](https://zenodo.org/records/15390483)
 
 
 ## Building
@@ -59,9 +79,17 @@ This project can be build as a Python library by running `pip install -e .` in t
 
 ## Documentation
 
-Documentation can be build with next two commands:
-- `sphinx-apidoc -fe -o docs/source/ src/pdgrapher/` updates the source files from which the documentation is built,
-- `docs/make html` builds the documentation
+Documentation can be built with the following commands:
+
+### Prerequisites
+First, install the required documentation dependencies:
+```bash
+pip install myst-parser
+```
+
+### Build Documentation
+1. `sphinx-apidoc -fe -o docs/source/ src/pdgrapher/` updates the source files from which the documentation is built
+2. `cd docs && make html` builds the documentation
 
 Then, the documentation can be accessed locally by going to `docs/build/html/index.html`
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
