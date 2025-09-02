@@ -170,7 +170,7 @@ for cell_line in cell_lines:
             recall_at_k_random[k] = average_recall_random
         
         
-    recall_dict[cell_line] = {'PDGrapher':recall_at_k, 'Random': recall_at_k_random}
+    recall_dict[cell_line] = {'PDGrapher':recall_at_k, 'Reference': recall_at_k_random}
     highlight_points_dict[cell_line] = highlight_points
     highlight_points_full_dict[cell_line] = highlight_points_full
 
@@ -191,7 +191,7 @@ outdir = 'processed'
 os.makedirs(outdir, exist_ok=True)
 
 # Extracting data
-methods = ['Random', 'PDGrapher']
+methods = ['Reference', 'PDGrapher']
 ks = [1, 10, 50, 100, 200, 300, 400, 500, 1000]
 
 # Initialize a dictionary to hold average recalls across cell lines
@@ -208,7 +208,7 @@ for method in methods:
 # Define the color palette
 palette = {
     'PDGrapher': '#04C4D9',
-    'Random': '#333333',
+    'Reference': '#333333',
 }
 
 
