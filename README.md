@@ -101,12 +101,15 @@ All of the settings along with links to instructions can be found and modified i
 | Train PDGrapher on genetic dataset     | [notebook](./notebooks/train_genetic.ipynb)    | 
 | Test PDGrapher on chemical/genetic dataset  | [notebook](./notebooks/test_PDG.ipynb)      | 
 
-## Reference
+## Additional Resources
+[Paper](https://www.nature.com/articles/s41551-025-01481-x)
+[HMS News & Research](https://hms.harvard.edu/news/new-ai-tool-pinpoints-genes-drug-combos-restore-health-diseased-cells)
+
 @article{gonzalez2025combinatorial,  
-  title={Combinatorial prediction of therapeutic perturbations using causally-inspired neural networks},  
+  title={Combinatorial Prediction of Therapeutic Perturbations Using Causally-Inspired Neural Networks},  
   author={Gonzalez, Guadalupe and Lin, Xiang and Herath, Isuru and Veselkov, Kirill and Bronstein, Michael and Zitnik, Marinka},  
-  journal={bioRxiv},  
-  pages={2024--01},  
+  journal={Nature Biomedical Engineering},  
+  url={https://www.nature.com/articles/s41551-025-01481-x},  
   year={2025}  
 }  
 
