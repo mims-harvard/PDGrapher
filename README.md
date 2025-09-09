@@ -95,9 +95,11 @@ Then, the documentation can be accessed locally by going to `docs/build/html/ind
 All of the settings along with links to instructions can be found and modified in [docs/source/conf.py](docs/source/conf.py). 
 
 ## Notebooks
-Train PDGrapher on chemical dataset [jupyter notebook](./notebooks/train_chemical.ipynb)  
-Train PDGrapher on genetic dataset [jupyter notebook](./notebooks/train_genetic.ipynb)  
-Test PDGrapher on chemical/genetic dataset [jupyter notebook](./notebooks/test_PDG.ipynb)  
+|  Tutorials       | Links                     |
+|----------------|---------------------------------|
+| Train PDGrapher on chemical dataset         | [notebook](./notebooks/train_chemical.ipynb)            |
+| Train PDGrapher on genetic dataset     | [notebook](./notebooks/train_genetic.ipynb)    | 
+| Test PDGrapher on chemical/genetic dataset  | [notebook](./notebooks/test_PDG.ipynb)      | 
 
 ## Reference
 @article{gonzalez2025combinatorial,  
