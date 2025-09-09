@@ -102,8 +102,8 @@ All of the settings along with links to instructions can be found and modified i
 | Test PDGrapher on chemical/genetic dataset  | [notebook](./notebooks/test_PDG.ipynb)      | 
 
 ## Additional Resources
-[Paper](https://www.nature.com/articles/s41551-025-01481-x)  
-[HMS News & Research](https://hms.harvard.edu/news/new-ai-tool-pinpoints-genes-drug-combos-restore-health-diseased-cells)
+- [Paper](https://www.nature.com/articles/s41551-025-01481-x)  
+- [HMS News & Research](https://hms.harvard.edu/news/new-ai-tool-pinpoints-genes-drug-combos-restore-health-diseased-cells)
 
 @article{gonzalez2025combinatorial,  
   title={Combinatorial Prediction of Therapeutic Perturbations Using Causally-Inspired Neural Networks},  
