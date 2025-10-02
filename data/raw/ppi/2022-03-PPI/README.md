@@ -7,7 +7,11 @@ https://downloads.thebiogrid.org/File/BioGRID/Release-Archive/BIOGRID-4.4.207/BI
 
 https://science.sciencemag.org/highwire/filestream/628238/field_highwire_adjunct_files/1/Datasets_S1-S4.zip
 
-http://www.interactome-atlas.org/data/HuRI.tsv
+http://www.interactome-atlas.org/data/HuRI.tsv  
+
+## Auxiliary files
+hgnc2map.txt: gene identity map  
+geneinfo_beta.txt: gene information of C-map data used for training PDGrapher
 
 ## References
 
