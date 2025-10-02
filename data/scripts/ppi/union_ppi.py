@@ -131,11 +131,11 @@ def union_G(biogrid_G, menche_G, huri_G, ppi_f):
 
 
 def main():  
-    entrez2hgnc, ensembl2hgnc = read_mapping("../../data/ppi/hgnc2map.txt")
-    biogrid_G = read_biogrid("../../data/ppi/BIOGRID-MV-Physical-4.4.207.tab3.txt", entrez2hgnc)
-    menche_G = read_menche("../../data/ppi/DataS1_interactome.tsv", entrez2hgnc) 
-    huri_G = read_huri("../../data/ppi/HuRI.tsv", ensembl2hgnc) 
-    ppi = union_G(biogrid_G, menche_G, huri_G, "../../data/ppi/ppi_edgelist.txt")
+    entrez2hgnc, ensembl2hgnc = read_mapping("../../data/ppi/2022-03-PPI/hgnc2map.txt")
+    biogrid_G = read_biogrid("../../data/ppi/2022-03-PPI/BIOGRID-MV-Physical-4.4.207.tab3.txt", entrez2hgnc)
+    menche_G = read_menche("../../data/ppi/2022-03-PPI/DataS1_interactome.tsv", entrez2hgnc) 
+    huri_G = read_huri("../../data/ppi/2022-03-PPI/HuRI.tsv", ensembl2hgnc) 
+    ppi = union_G(biogrid_G, menche_G, huri_G, "../../data/ppi/2022-03-PPI/ppi_edgelist.txt")
 
 
 if __name__ == "__main__":
