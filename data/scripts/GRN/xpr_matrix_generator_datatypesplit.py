@@ -48,7 +48,7 @@ matrix_xpr_trans.columns = new_cols
 
 
 #Subsetting matrix_xpr_trans column genes to include only those in the ppi, but not those that are perturbed.
-path_edge_list = '/n/holylabs/LABS/mzitnik_lab/Users/xianglin226/data/ppi//ppi_all_genes_edgelist.txt'
+path_edge_list = 'data/raw/ppi/ppi_all_genes_edgelist.txt'
 ppi = nx.read_edgelist(path_edge_list)
 ppi = ppi.subgraph(gene_info['gene_symbol'].tolist())
 
@@ -57,7 +57,7 @@ ppi = ppi.subgraph(gene_info['gene_symbol'].tolist())
 #for cell_line in list(set(inst_info_xpr['cell_iname'])):
 	#pert_genes[cell_line] = set(inst_info_xpr[inst_info_xpr['cell_iname']==cell_line]['cmap_name'].tolist())
 
-outdir = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/xpr_matrices/'
+outdir = 'data/raw/grn/xpr_matrices/'
 os.makedirs(outdir, exist_ok=True)
 
 #chemical cell lines
