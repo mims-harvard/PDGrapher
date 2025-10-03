@@ -6,7 +6,7 @@ import os.path as osp
 import h5py
 
 #Loading Data
-DATA_ROOT = "/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/lincs/"
+DATA_ROOT = "data/raw/lincs/"
 #log_handle = open(osp.join(outdir, 'process_data_lognorm_log.txt'), 'w')
 #log_handle = open(osp.join(outdir, 'test_log.txt'), 'w')
 
