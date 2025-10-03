@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import os
 import time
-root = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/'
+root = 'data/raw/'
 import argparse
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--cell_line', default=None, nargs='+')
