@@ -17,11 +17,11 @@ celllines = args.cell_line
 #chemical
 if data_type == "chemical":
     print("Chemical")
-    gene_info = pd.read_csv('/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/lincs/geneinfo_beta.txt', sep="\t", low_memory=False)
-    outdir = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/filter/'
+    gene_info = pd.read_csv('data/raw/lincs/geneinfo_beta.txt', sep="\t", low_memory=False)
+    outdir = 'data/raw/grn/filter/'
     for i in celllines:
         log_handle = open(f'log_grn_all_genes_genetic_{i}.txt', 'w')
-        path_edge_list = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/processed/{}_cmp_edgelist.txt'.format(i)
+        path_edge_list = 'data/raw/grn/processed/{}_cmp_edgelist.txt'.format(i)
         print("Do: ", i)
         grn_0 = nx.read_edgelist(path_edge_list, nodetype=str, data=(('weight', float),))
         grn_1 = [(u, v, d['weight']) for u, v, d in grn_0.edges(data=True)]
@@ -53,11 +53,11 @@ if data_type == "chemical":
         nx.write_edgelist(grn, grn_f, data=False)
 
 elif data_type == "genetic":
-    gene_info = pd.read_csv('/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/lincs/geneinfo_beta.txt', sep="\t", low_memory=False)
-    outdir = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/filter/'
+    gene_info = pd.read_csv('data/raw/lincs/geneinfo_beta.txt', sep="\t", low_memory=False)
+    outdir = 'data/raw/grn/filter/'
     for i in celllines:
         log_handle = open(f'log_grn_all_genes_genetic_{i}.txt', 'w')
-        path_edge_list = '/n/holystore01/LABS/mzitnik_lab/Lab/xianglin226/PDgrapher/grn/processed/{}_gen_edgelist.txt'.format(i)
+        path_edge_list = 'data/raw/grn/processed/{}_gen_edgelist.txt'.format(i)
         print("Do: ", i)
         grn_0 = nx.read_edgelist(path_edge_list, nodetype=str, data=(('weight', float),))
         grn_1 = [(u, v, d['weight']) for u, v, d in grn_0.edges(data=True)]
