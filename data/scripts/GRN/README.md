@@ -26,7 +26,6 @@ Use `filter_edge_list.py` to build the `{cell_line}_{pert_type}_edgelist_filtere
 
 **Inputs:**  
 - `{cell_line}_{pert_type}_edgelist.txt` files (from step 2)  
-- `ppi_all_genes_edgelist.txt` (see `data/scripts/ppi` for instructions on generating this file)  
 
 **Command Example:**  
 python filter_edge_list.py --data_type cmp --cell_line A549
